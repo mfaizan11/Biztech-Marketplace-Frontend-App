@@ -41,6 +41,8 @@ The content is organized as follows:
 </file_summary>
 
 <directory_structure>
+.env.development
+.env.production
 .gitignore
 index.html
 package.json
@@ -133,6 +135,15 @@ vite.config.ts
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path=".env.development">
+VITE_API_URL=http://localhost:3000/api/v1
+</file>
+
+<file path=".env.production">
+# Replace with your actual backend domain when you deploy
+VITE_API_URL=https://api.marketplace.biztech.ae/api/v1
+</file>
 
 <file path=".gitignore">
 node_modules
@@ -294,9 +305,6 @@ export default function App() {
 
 <file path="src/components/DashboardHeader.tsx">
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { UserRole } from '../types';
 
 interface DashboardHeaderProps {
   title: string;
@@ -306,75 +314,17 @@ interface DashboardHeaderProps {
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, description, children, action }) => {
-  const navigate = useNavigate();
-  const { user, login } = useAuth();
-  const [showRoleSwitcher, setShowRoleSwitcher] = React.useState(false);
-
-  const switchRole = async (newRole: UserRole) => {
-    if (user) {
-      await login(user.email, 'password', newRole);
-      navigate(`/dashboard/${newRole}`);
-      setShowRoleSwitcher(false);
-    }
-  };
-
   return (
     <div className="mb-8">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 style={{ color: '#0D1B2A' }}>{title}</h1>
-          <p style={{ color: '#6B7280' }}>{description}</p>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#0D1B2A' }}>{title}</h1>
+          <p className="text-gray-500 mt-1">{description}</p>
         </div>
-        {action}
-        {children}
-      </div>
-
-      {/* Role Switcher - Testing Only */}
-      <div className="mt-4 relative">
-        <button
-          onClick={() => setShowRoleSwitcher(!showRoleSwitcher)}
-          className="text-xs px-3 py-1 rounded border"
-          style={{ 
-            borderColor: '#E5E7EB', 
-            color: '#6B7280',
-            backgroundColor: '#F9FAFB'
-          }}
-        >
-          🔄 Switch Role (Testing)
-        </button>
-
-        {showRoleSwitcher && (
-          <div className="absolute top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10 min-w-[200px]">
-            <button
-              onClick={() => switchRole('admin')}
-              className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${user?.role === 'admin' ? 'bg-blue-50' : ''}`}
-              style={{ color: user?.role === 'admin' ? '#2EC4B6' : '#374151' }}
-            >
-              Admin Dashboard
-            </button>
-            <button
-              onClick={() => switchRole('agent')}
-              className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${user?.role === 'agent' ? 'bg-blue-50' : ''}`}
-              style={{ color: user?.role === 'agent' ? '#2EC4B6' : '#374151' }}
-            >
-              Agent Dashboard
-            </button>
-            <button
-              onClick={() => switchRole('seller')}
-              className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${user?.role === 'seller' ? 'bg-blue-50' : ''}`}
-              style={{ color: user?.role === 'seller' ? '#2EC4B6' : '#374151' }}
-            >
-              Seller Dashboard
-            </button>
-            <button
-              onClick={() => switchRole('buyer')}
-              className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${user?.role === 'buyer' ? 'bg-blue-50' : ''}`}
-              style={{ color: user?.role === 'buyer' ? '#2EC4B6' : '#374151' }}
-            >
-              Buyer Dashboard
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {action}
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -6032,68 +5982,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 </file>
 
-<file path="src/contexts/AuthContext.tsx">
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, UserRole } from '../types';
-
-interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string, role: UserRole) => Promise<void>;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-
-  const login = async (email: string, password: string, role: UserRole) => {
-    // Mock login - in production, this would call an API
-    const roleNames = {
-      admin: 'Admin User',
-      agent: 'John Smith',
-      seller: 'Sarah Johnson',
-      buyer: 'Michael Chen'
-    };
-
-    const mockUser: User = {
-      id: '1',
-      name: roleNames[role],
-      email,
-      role,
-      createdAt: new Date().toISOString(),
-    };
-    setUser(mockUser);
-  };
-
-  const logout = () => {
-    setUser(null);
-  };
-
-  const value = {
-    user,
-    login,
-    logout,
-    isAuthenticated: !!user,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-</file>
-
 <file path="src/hooks/useAuth.ts">
 // Custom hook for authentication
 // Re-export the useAuth hook from AuthContext for convenience
@@ -6279,228 +6167,285 @@ createRoot(document.getElementById('root')!).render(
 </file>
 
 <file path="src/pages/AdminDashboard.tsx">
-import React, { useState } from 'react';
-import { Users, Building2, UserCog, TrendingUp, CheckCircle, Clock, XCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Building2, UserCog, TrendingUp, CheckCircle, Clock, XCircle, RefreshCw } from 'lucide-react';
 import { DashboardHeader } from '../components/DashboardHeader';
+import { adminAPI } from '../services/api';
+import { User, Listing } from '../types';
+import { toast } from 'sonner'; 
 
 export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'listings' | 'agents'>('overview');
+  const [loading, setLoading] = useState(true);
+  
+  // Dynamic State
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    pendingApprovals: 0,
+    activeListings: 0,
+    totalAgents: 0,
+    monthlyRevenue: 0
+  });
 
-  // Mock data
-  const stats = {
-    totalUsers: 342,
-    pendingApprovals: 12,
-    activeListings: 89,
-    totalAgents: 8,
-    monthlyRevenue: 45600,
-    activeLeads: 156
+  const [pendingSellers, setPendingSellers] = useState<User[]>([]);
+  const [pendingListings, setPendingListings] = useState<Listing[]>([]);
+  const [agents, setAgents] = useState<User[]>([]);
+
+  // 1. DATA FETCHING
+  const loadDashboardData = async () => {
+    setLoading(true);
+    try {
+      const [statsData, sellersData, listingsData, agentsData] = await Promise.all([
+        adminAPI.getStats(),
+        adminAPI.getUsers({ role: 'seller', status: 'pending' }),
+        adminAPI.getPendingListings(),
+        adminAPI.getUsers({ role: 'agent' })
+      ]);
+
+      setStats(statsData);
+      setPendingSellers(sellersData);
+      setPendingListings(listingsData);
+      setAgents(agentsData);
+    } catch (error) {
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const pendingUsers = [
-    { id: '1', name: 'Ahmed Al Maktoum', email: 'ahmed@company.ae', role: 'seller', date: '2024-12-07' },
-    { id: '2', name: 'Sarah Johnson', email: 'sarah@investment.com', role: 'buyer', date: '2024-12-07' },
-    { id: '3', name: 'Mohammed Hassan', email: 'mhhassan@ventures.ae', role: 'seller', date: '2024-12-06' },
-  ];
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
-  const recentListings = [
-    { id: '1', title: 'Premium Restaurant - Dubai Marina', seller: 'Ahmed Al Maktoum', price: 2500000, status: 'pending', assignedAgent: null },
-    { id: '2', title: 'Tech Startup - DIFC', seller: 'Tech Ventures LLC', price: 1800000, status: 'active', assignedAgent: 'John Smith' },
-    { id: '3', title: 'Retail Store - JBR', seller: 'Sarah Johnson', price: 950000, status: 'active', assignedAgent: 'Emma Davis' },
-  ];
+  // 2. ACTION HANDLERS
+  const handleUserAction = async (userId: string, status: 'active' | 'rejected') => {
+    try {
+      await adminAPI.updateUserStatus(userId, status);
+      toast.success(`User ${status === 'active' ? 'approved' : 'rejected'}`);
+      loadDashboardData(); // Refresh
+    } catch (error) {
+      toast.error("Action failed");
+    }
+  };
+
+  const handleAssignAgent = async (listingId: string, agentId: string) => {
+    if (!agentId) return;
+    try {
+      await adminAPI.assignListingToAgent(listingId, agentId);
+      toast.success("Agent assigned successfully");
+      loadDashboardData(); // Refresh
+    } catch (error) {
+      toast.error("Assignment failed");
+    }
+  };
+
+  if (loading && stats.totalUsers === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <RefreshCw className="w-8 h-8 animate-spin text-[#2EC4B6]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
         <DashboardHeader 
           title="Admin Dashboard" 
           description="Manage users, listings, and agent assignments" 
+          action={
+            <button 
+              onClick={loadDashboardData}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <RefreshCw className="w-5 h-5 text-gray-400" />
+            </button>
+          }
         />
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm" style={{ color: '#6B7280' }}>Total Users</p>
-              <Users className="w-5 h-5" style={{ color: '#2EC4B6' }} />
+              <p className="text-sm font-medium text-gray-500">Total Platform Users</p>
+              <Users className="w-5 h-5 text-[#2EC4B6]" />
             </div>
-            <p className="text-3xl mb-1" style={{ color: '#0D1B2A' }}>{stats.totalUsers}</p>
-            <p className="text-sm" style={{ color: '#10B981' }}>+12 this month</p>
+            <p className="text-3xl font-bold text-[#0D1B2A]">{stats.totalUsers}</p>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm" style={{ color: '#6B7280' }}>Pending Approvals</p>
-              <Clock className="w-5 h-5" style={{ color: '#F59E0B' }} />
+              <p className="text-sm font-medium text-gray-500">Pending Seller Approvals</p>
+              <Clock className="w-5 h-5 text-amber-500" />
             </div>
-            <p className="text-3xl mb-1" style={{ color: '#0D1B2A' }}>{stats.pendingApprovals}</p>
-            <p className="text-sm" style={{ color: '#F59E0B' }}>Needs attention</p>
+            <p className="text-3xl font-bold text-[#0D1B2A]">{stats.pendingApprovals}</p>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm" style={{ color: '#6B7280' }}>Active Listings</p>
-              <Building2 className="w-5 h-5" style={{ color: '#2EC4B6' }} />
+              <p className="text-sm font-medium text-gray-500">Live Business Listings</p>
+              <Building2 className="w-5 h-5 text-[#2EC4B6]" />
             </div>
-            <p className="text-3xl mb-1" style={{ color: '#0D1B2A' }}>{stats.activeListings}</p>
-            <p className="text-sm" style={{ color: '#10B981' }}>+8 this week</p>
+            <p className="text-3xl font-bold text-[#0D1B2A]">{stats.activeListings}</p>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm" style={{ color: '#6B7280' }}>Active Agents</p>
-              <UserCog className="w-5 h-5" style={{ color: '#2EC4B6' }} />
+              <p className="text-sm font-medium text-gray-500">Monthly Tier Revenue</p>
+              <TrendingUp className="w-5 h-5 text-green-500" />
             </div>
-            <p className="text-3xl mb-1" style={{ color: '#0D1B2A' }}>{stats.totalAgents}</p>
-            <p className="text-sm" style={{ color: '#6B7280' }}>All verified</p>
+            <p className="text-3xl font-bold text-[#0D1B2A]">AED {stats.monthlyRevenue.toLocaleString()}</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="mb-6">
-          <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {[
+            { id: 'overview', label: 'Overview' },
+            { id: 'users', label: `Pending Sellers (${pendingSellers.length})` },
+            { id: 'listings', label: `Pending Listings (${pendingListings.length})` },
+            { id: 'agents', label: 'Agent Management' }
+          ].map((tab) => (
             <button
-              onClick={() => setActiveTab('overview')}
-              className={`px-6 py-2.5 rounded-full transition-all`}
-              style={{
-                backgroundColor: activeTab === 'overview' ? '#2EC4B6' : 'white',
-                color: activeTab === 'overview' ? 'white' : '#0D1B2A'
-              }}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-6 py-2.5 rounded-full whitespace-nowrap transition-all font-medium border ${
+                activeTab === tab.id 
+                ? 'bg-[#0D1B2A] text-white border-[#0D1B2A]' 
+                : 'bg-white text-gray-600 border-gray-200 hover:border-[#2EC4B6]'
+              }`}
             >
-              Overview
+              {tab.label}
             </button>
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`px-6 py-2.5 rounded-full transition-all`}
-              style={{
-                backgroundColor: activeTab === 'users' ? '#2EC4B6' : 'white',
-                color: activeTab === 'users' ? 'white' : '#0D1B2A'
-              }}
-            >
-              User Approvals ({stats.pendingApprovals})
-            </button>
-            <button
-              onClick={() => setActiveTab('listings')}
-              className={`px-6 py-2.5 rounded-full transition-all`}
-              style={{
-                backgroundColor: activeTab === 'listings' ? '#2EC4B6' : 'white',
-                color: activeTab === 'listings' ? 'white' : '#0D1B2A'
-              }}
-            >
-              Listing Management
-            </button>
-            <button
-              onClick={() => setActiveTab('agents')}
-              className={`px-6 py-2.5 rounded-full transition-all`}
-              style={{
-                backgroundColor: activeTab === 'agents' ? '#2EC4B6' : 'white',
-                color: activeTab === 'agents' ? 'white' : '#0D1B2A'
-              }}
-            >
-              Agent Assignments
-            </button>
-          </div>
+          ))}
         </div>
 
         {/* Content Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          {/* User Approvals Tab */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 min-h-[400px]">
+          
+          {/* USER APPROVALS */}
           {activeTab === 'users' && (
-            <div>
-              <h3 className="mb-4" style={{ color: '#0D1B2A' }}>Pending User Approvals</h3>
-              <div className="space-y-4">
-                {pendingUsers.map(user => (
-                  <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg" style={{ borderColor: '#E5E7EB' }}>
-                    <div>
-                      <p style={{ color: '#0D1B2A' }}>{user.name}</p>
-                      <p className="text-sm" style={{ color: '#6B7280' }}>{user.email}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF' }}>
-                          {user.role}
-                        </span>
-                        <span className="text-xs" style={{ color: '#9CA3AF' }}>Applied {user.date}</span>
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-[#0D1B2A] mb-6">Seller Registration Requests</h3>
+              {pendingSellers.length === 0 ? (
+                <div className="text-center py-20 text-gray-400">No pending requests found</div>
+              ) : (
+                <div className="space-y-4">
+                  {pendingSellers.map(user => (
+                    <div key={user.id} className="flex flex-col md:flex-row md:items-center justify-between p-5 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                      <div className="mb-4 md:mb-0">
+                        <p className="font-bold text-[#0D1B2A]">{user.name}</p>
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded font-bold uppercase">Seller</span>
+                          <span className="text-xs text-gray-400">Registered: {new Date(user.createdAt).toLocaleDateString()}</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="px-4 py-2 rounded-lg flex items-center gap-2" style={{ backgroundColor: '#10B981', color: 'white' }}>
-                        <CheckCircle className="w-4 h-4" />
-                        Approve
-                      </button>
-                      <button className="px-4 py-2 rounded-lg flex items-center gap-2" style={{ backgroundColor: '#EF4444', color: 'white' }}>
-                        <XCircle className="w-4 h-4" />
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Listing Management Tab */}
-          {activeTab === 'listings' && (
-            <div>
-              <h3 className="mb-4" style={{ color: '#0D1B2A' }}>Recent Listings</h3>
-              <div className="space-y-4">
-                {recentListings.map(listing => (
-                  <div key={listing.id} className="flex items-center justify-between p-4 border rounded-lg" style={{ borderColor: '#E5E7EB' }}>
-                    <div className="flex-1">
-                      <p style={{ color: '#0D1B2A' }}>{listing.title}</p>
-                      <p className="text-sm" style={{ color: '#6B7280' }}>by {listing.seller}</p>
-                      <div className="flex items-center gap-4 mt-2">
-                        <p className="text-sm" style={{ color: '#2EC4B6' }}>AED {listing.price.toLocaleString()}</p>
-                        <span className={`text-xs px-2 py-1 rounded ${listing.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                          {listing.status}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      {listing.assignedAgent ? (
-                        <p className="text-sm" style={{ color: '#6B7280' }}>Agent: {listing.assignedAgent}</p>
-                      ) : (
-                        <button className="px-4 py-2 rounded-lg" style={{ backgroundColor: '#2EC4B6', color: 'white' }}>
-                          Assign Agent
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={() => handleUserAction(user.id, 'active')}
+                          className="flex-1 md:flex-none px-6 py-2 bg-green-500 text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:bg-green-600"
+                        >
+                          <CheckCircle className="w-4 h-4" /> Approve
                         </button>
-                      )}
+                        <button 
+                          onClick={() => handleUserAction(user.id, 'rejected')}
+                          className="flex-1 md:flex-none px-6 py-2 bg-red-50 text-red-600 rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-100"
+                        >
+                          <XCircle className="w-4 h-4" /> Reject
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Overview Tab */}
+          {/* LISTING MANAGEMENT */}
+          {activeTab === 'listings' && (
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-[#0D1B2A] mb-6">New Listings Needing Agent Assignment</h3>
+              {pendingListings.length === 0 ? (
+                <div className="text-center py-20 text-gray-400">All listings have been processed</div>
+              ) : (
+                <div className="space-y-4">
+                  {pendingListings.map(listing => (
+                    <div key={listing.id} className="flex flex-col md:flex-row md:items-center justify-between p-5 border border-gray-100 rounded-xl">
+                      <div className="flex-1 mb-4 md:mb-0">
+                        <div className="flex items-center gap-2 mb-1">
+                           <h4 className="font-bold text-[#0D1B2A]">{listing.publicData.title}</h4>
+                           <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${listing.tier === 'premium' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                             {listing.tier}
+                           </span>
+                        </div>
+                        <p className="text-sm text-gray-500">Owner: {(listing as any).Seller?.name || 'Unknown'}</p>
+                        <p className="text-sm font-bold text-[#2EC4B6] mt-1">AED {listing.publicData.price.toLocaleString()}</p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <select 
+                          className="w-full sm:w-48 px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#2EC4B6]"
+                          onChange={(e) => handleAssignAgent(listing.id, e.target.value)}
+                          defaultValue=""
+                        >
+                          <option value="" disabled>Choose Agent...</option>
+                          {agents.map(agent => (
+                            <option key={agent.id} value={agent.id}>{agent.name}</option>
+                          ))}
+                        </select>
+                        <p className="text-[10px] text-gray-400 font-medium">Assignment activates the ad</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* OVERVIEW / PERFORMANCE */}
           {activeTab === 'overview' && (
-            <div>
-              <h3 className="mb-4" style={{ color: '#0D1B2A' }}>Platform Overview</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 border rounded-lg" style={{ borderColor: '#E5E7EB' }}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <TrendingUp className="w-5 h-5" style={{ color: '#2EC4B6' }} />
-                    <h4 style={{ color: '#0D1B2A' }}>Revenue This Month</h4>
-                  </div>
-                  <p className="text-2xl mb-1" style={{ color: '#0D1B2A' }}>AED {stats.monthlyRevenue.toLocaleString()}</p>
-                  <p className="text-sm" style={{ color: '#10B981' }}>+18% from last month</p>
-                </div>
-                <div className="p-4 border rounded-lg" style={{ borderColor: '#E5E7EB' }}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <Users className="w-5 h-5" style={{ color: '#2EC4B6' }} />
-                    <h4 style={{ color: '#0D1B2A' }}>Active Leads</h4>
-                  </div>
-                  <p className="text-2xl mb-1" style={{ color: '#0D1B2A' }}>{stats.activeLeads}</p>
-                  <p className="text-sm" style={{ color: '#6B7280' }}>Across all listings</p>
-                </div>
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-[#0D1B2A] mb-6">Platform Health</h3>
+              <div className="grid md:grid-cols-2 gap-8">
+                 <div className="p-6 rounded-2xl bg-gray-50 border border-gray-100">
+                    <h4 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
+                       <UserCog className="w-5 h-5 text-[#2EC4B6]" /> Agent Productivity
+                    </h4>
+                    <p className="text-sm text-gray-500">Currently managing <strong>{stats.totalAgents}</strong> internal agents handling live portfolios.</p>
+                 </div>
+                 <div className="p-6 rounded-2xl bg-[#0D1B2A] text-white">
+                    <h4 className="font-bold mb-4 flex items-center gap-2 text-[#2EC4B6]">
+                       <TrendingUp className="w-5 h-5" /> Revenue Target
+                    </h4>
+                    <p className="text-2xl font-bold">AED {stats.monthlyRevenue.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400 mt-2">Based on current Premium Listing subscriptions.</p>
+                 </div>
               </div>
             </div>
           )}
 
-          {/* Agent Assignments Tab */}
+          {/* AGENT MANAGEMENT */}
           {activeTab === 'agents' && (
-            <div>
-              <h3 className="mb-4" style={{ color: '#0D1B2A' }}>Agent Performance</h3>
-              <p style={{ color: '#6B7280' }}>Agent assignment and performance tracking coming soon...</p>
-            </div>
+             <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                   <h3 className="text-lg font-bold text-[#0D1B2A]">Internal Brokerage Team</h3>
+                   <button className="px-4 py-2 bg-[#2EC4B6] text-white rounded-lg text-sm font-bold">Add New Agent</button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                   {agents.map(agent => (
+                      <div key={agent.id} className="p-4 border border-gray-100 rounded-xl">
+                         <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                            <UserCog className="w-5 h-5 text-[#0D1B2A]" />
+                         </div>
+                         <p className="font-bold text-sm">{agent.name}</p>
+                         <p className="text-xs text-gray-500 mb-3">{agent.email}</p>
+                         <button className="text-xs font-bold text-[#2EC4B6] hover:underline uppercase tracking-wider">View Assigned Leads</button>
+                      </div>
+                   ))}
+                </div>
+             </div>
           )}
+
         </div>
       </div>
     </div>
@@ -6510,214 +6455,121 @@ export const AdminDashboard: React.FC = () => {
 
 <file path="src/pages/AgentDashboard.tsx">
 import React, { useState } from 'react';
-import { Building2, Users, MessageSquare, CheckCircle, Clock, Phone, Mail } from 'lucide-react';
+import { Building2, Users, MessageSquare, CheckCircle, FileText, BarChart3, ShieldCheck, Clock } from 'lucide-react';
 import { DashboardHeader } from '../components/DashboardHeader';
 
 export const AgentDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'listings' | 'leads' | 'messages'>('listings');
+  const [activeTab, setActiveTab] = useState<'listings' | 'leads' | 'deliverables'>('listings');
 
-  // Mock data
-  const stats = {
-    assignedListings: 12,
-    activeLeads: 34,
-    closedDeals: 5,
-    pendingEnquiries: 8
-  };
-
+  // Updated Mock data reflecting Paid vs Free deliverables
   const assignedListings = [
-    { id: '1', title: 'Premium Restaurant - Dubai Marina', seller: 'Ahmed Al Maktoum', price: 2500000, leads: 8, status: 'active' },
-    { id: '2', title: 'Tech Startup - DIFC', seller: 'Tech Ventures LLC', price: 1800000, leads: 12, status: 'active' },
-    { id: '3', title: 'Retail Store - JBR', seller: 'Sarah Johnson', price: 950000, leads: 5, status: 'active' },
+    { 
+        id: '1', 
+        title: 'Premium Restaurant - Dubai Marina', 
+        seller: 'Ahmed Al Maktoum', 
+        tier: 'premium', 
+        salePack: 'pending', 
+        projections: 'in_progress', 
+        attestation: 'not_started' 
+    },
+    { 
+        id: '2', 
+        title: 'Boutique Coffee Shop - JLT', 
+        seller: 'Sarah Johnson', 
+        tier: 'basic', 
+        salePack: 'n/a', 
+        projections: 'n/a', 
+        attestation: 'standard_assist' 
+    },
   ];
-
-  const recentLeads = [
-    { id: '1', buyerName: 'Omar Abdullah', listing: 'Premium Restaurant - Dubai Marina', financialMeans: '>1M', status: 'new', date: '2024-12-08' },
-    { id: '2', buyerName: 'Lisa Chen', listing: 'Tech Startup - DIFC', financialMeans: '100k-1M', status: 'contacted', date: '2024-12-07' },
-    { id: '3', buyerName: 'David Miller', listing: 'Retail Store - JBR', financialMeans: '>1M', status: 'new', date: '2024-12-07' },
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'new': return { bg: '#FEF3C7', text: '#92400E' };
-      case 'contacted': return { bg: '#DBEAFE', text: '#1E40AF' };
-      case 'closed': return { bg: '#D1FAE5', text: '#065F46' };
-      default: return { bg: '#F3F4F6', text: '#374151' };
-    }
-  };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
         <DashboardHeader 
-          title="Agent Dashboard" 
-          description="Manage your assigned listings and buyer enquiries" 
+          title="Agent Workspace" 
+          description="Manage assigned listings and fulfill Paid Service deliverables" 
         />
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm" style={{ color: '#6B7280' }}>Assigned Listings</p>
-              <Building2 className="w-5 h-5" style={{ color: '#2EC4B6' }} />
-            </div>
-            <p className="text-3xl mb-1" style={{ color: '#0D1B2A' }}>{stats.assignedListings}</p>
-            <p className="text-sm" style={{ color: '#6B7280' }}>Active portfolios</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm" style={{ color: '#6B7280' }}>Active Leads</p>
-              <Users className="w-5 h-5" style={{ color: '#2EC4B6' }} />
-            </div>
-            <p className="text-3xl mb-1" style={{ color: '#0D1B2A' }}>{stats.activeLeads}</p>
-            <p className="text-sm" style={{ color: '#10B981' }}>+6 this week</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm" style={{ color: '#6B7280' }}>Pending Enquiries</p>
-              <Clock className="w-5 h-5" style={{ color: '#F59E0B' }} />
-            </div>
-            <p className="text-3xl mb-1" style={{ color: '#0D1B2A' }}>{stats.pendingEnquiries}</p>
-            <p className="text-sm" style={{ color: '#F59E0B' }}>Needs response</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm" style={{ color: '#6B7280' }}>Closed Deals</p>
-              <CheckCircle className="w-5 h-5" style={{ color: '#10B981' }} />
-            </div>
-            <p className="text-3xl mb-1" style={{ color: '#0D1B2A' }}>{stats.closedDeals}</p>
-            <p className="text-sm" style={{ color: '#10B981' }}>This month</p>
-          </div>
-        </div>
-
-        {/* Tabs */}
         <div className="bg-white rounded-lg shadow-sm">
           <div className="border-b" style={{ borderColor: '#E5E7EB' }}>
             <div className="flex gap-8 px-6">
               <button
                 onClick={() => setActiveTab('listings')}
-                className={`py-4 border-b-2 transition-all ${activeTab === 'listings' ? '' : 'border-transparent'}`}
-                style={{
-                  borderColor: activeTab === 'listings' ? '#2EC4B6' : 'transparent',
-                  color: activeTab === 'listings' ? '#2EC4B6' : '#6B7280'
-                }}
+                className={`py-4 border-b-2 font-medium transition-all ${activeTab === 'listings' ? 'border-[#2EC4B6] text-[#2EC4B6]' : 'border-transparent text-gray-500'}`}
               >
-                My Listings
+                Assigned Listings
+              </button>
+              <button
+                onClick={() => setActiveTab('deliverables')}
+                className={`py-4 border-b-2 font-medium transition-all ${activeTab === 'deliverables' ? 'border-[#2EC4B6] text-[#2EC4B6]' : 'border-transparent text-gray-500'}`}
+              >
+                Deliverables (Sale Packs)
               </button>
               <button
                 onClick={() => setActiveTab('leads')}
-                className={`py-4 border-b-2 transition-all flex items-center gap-2 ${activeTab === 'leads' ? '' : 'border-transparent'}`}
-                style={{
-                  borderColor: activeTab === 'leads' ? '#2EC4B6' : 'transparent',
-                  color: activeTab === 'leads' ? '#2EC4B6' : '#6B7280'
-                }}
+                className={`py-4 border-b-2 font-medium transition-all ${activeTab === 'leads' ? 'border-[#2EC4B6] text-[#2EC4B6]' : 'border-transparent text-gray-500'}`}
               >
                 Leads & Enquiries
-                {stats.pendingEnquiries > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-xs" style={{ backgroundColor: '#F59E0B', color: 'white' }}>
-                    {stats.pendingEnquiries}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab('messages')}
-                className={`py-4 border-b-2 transition-all ${activeTab === 'messages' ? '' : 'border-transparent'}`}
-                style={{
-                  borderColor: activeTab === 'messages' ? '#2EC4B6' : 'transparent',
-                  color: activeTab === 'messages' ? '#2EC4B6' : '#6B7280'
-                }}
-              >
-                Messages
               </button>
             </div>
           </div>
 
           <div className="p-6">
-            {/* My Listings Tab */}
             {activeTab === 'listings' && (
-              <div>
-                <h3 className="mb-4" style={{ color: '#0D1B2A' }}>Assigned Listings</h3>
-                <div className="space-y-4">
-                  {assignedListings.map(listing => (
-                    <div key={listing.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow" style={{ borderColor: '#E5E7EB' }}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 style={{ color: '#0D1B2A' }}>{listing.title}</h4>
-                          <p className="text-sm mt-1" style={{ color: '#6B7280' }}>Seller: {listing.seller}</p>
-                          <div className="flex items-center gap-4 mt-3">
-                            <p style={{ color: '#2EC4B6' }}>AED {listing.price.toLocaleString()}</p>
-                            <span className="text-sm px-2 py-1 rounded" style={{ backgroundColor: '#D1FAE5', color: '#065F46' }}>
-                              {listing.status}
-                            </span>
-                            <span className="text-sm" style={{ color: '#6B7280' }}>
-                              <Users className="w-4 h-4 inline mr-1" />
-                              {listing.leads} leads
-                            </span>
-                          </div>
-                        </div>
-                        <button className="px-4 py-2 rounded-lg" style={{ backgroundColor: '#2EC4B6', color: 'white' }}>
-                          View Details
-                        </button>
+              <div className="space-y-4">
+                {assignedListings.map(listing => (
+                  <div key={listing.id} className="p-4 border rounded-lg flex items-center justify-between" style={{ borderColor: '#E5E7EB' }}>
+                    <div>
+                      <h4 className="font-bold">{listing.title}</h4>
+                      <div className="flex gap-2 mt-1">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${listing.tier === 'premium' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>
+                          {listing.tier === 'premium' ? 'PAID SERVICE' : 'FREE AD'}
+                        </span>
+                        <p className="text-xs text-gray-500">Seller: {listing.seller}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <button 
+                        onClick={() => listing.tier === 'premium' ? setActiveTab('deliverables') : null}
+                        className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      {listing.tier === 'premium' ? 'Manage Sale Pack' : 'View Documentation'}
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Leads Tab */}
-            {activeTab === 'leads' && (
-              <div>
-                <h3 className="mb-4" style={{ color: '#0D1B2A' }}>Recent Enquiries</h3>
-                <div className="space-y-4">
-                  {recentLeads.map(lead => {
-                    const statusColors = getStatusColor(lead.status);
-                    return (
-                      <div key={lead.id} className="p-4 border rounded-lg" style={{ borderColor: '#E5E7EB' }}>
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <p style={{ color: '#0D1B2A' }}>{lead.buyerName}</p>
-                            <p className="text-sm" style={{ color: '#6B7280' }}>{lead.listing}</p>
-                          </div>
-                          <span className="text-xs px-3 py-1 rounded" style={{ backgroundColor: statusColors.bg, color: statusColors.text }}>
-                            {lead.status}
-                          </span>
+            {activeTab === 'deliverables' && (
+              <div className="space-y-8">
+                {assignedListings.filter(l => l.tier === 'premium').map(listing => (
+                    <div key={listing.id} className="p-6 border rounded-xl bg-gray-50">
+                        <h4 className="font-bold text-lg mb-4">{listing.title}</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                                <FileText className="w-5 h-5 text-[#2EC4B6] mb-2" />
+                                <h5 className="font-bold text-sm">Professional Sale Pack</h5>
+                                <p className="text-xs text-gray-500 mb-3">Prepare business assessments for potential buyers.</p>
+                                <div className="flex items-center gap-2">
+                                    <Clock className="w-3 h-3 text-amber-500" />
+                                    <span className="text-[10px] font-bold text-amber-600 uppercase">{listing.salePack}</span>
+                                </div>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                                <BarChart3 className="w-5 h-5 text-[#2EC4B6] mb-2" />
+                                <h5 className="font-bold text-sm">Financial Projections</h5>
+                                <p className="text-xs text-gray-500 mb-3">Analysis and future projections of revenue.</p>
+                                <button className="text-[10px] text-[#2EC4B6] font-bold hover:underline">UPLOAD DOCUMENTS</button>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                                <ShieldCheck className="w-5 h-5 text-[#2EC4B6] mb-2" />
+                                <h5 className="font-bold text-sm">Legal Attestation</h5>
+                                <p className="text-xs text-gray-500 mb-3">Arrangements for final transfer and legal checks.</p>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">{listing.attestation.replace('_', ' ')}</span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-4 mb-3">
-                          <span className="text-sm px-2 py-1 rounded" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF' }}>
-                            {lead.financialMeans === '>1M' ? '> AED 1M' : lead.financialMeans === '100k-1M' ? 'AED 100K - 1M' : '< AED 100K'}
-                          </span>
-                          <span className="text-sm" style={{ color: '#9CA3AF' }}>{lead.date}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <button className="px-4 py-2 rounded-lg flex items-center gap-2" style={{ backgroundColor: '#0D1B2A', color: 'white' }}>
-                            <Phone className="w-4 h-4" />
-                            Call
-                          </button>
-                          <button className="px-4 py-2 rounded-lg flex items-center gap-2 border" style={{ borderColor: '#E5E7EB', color: '#374151' }}>
-                            <Mail className="w-4 h-4" />
-                            Email
-                          </button>
-                          <button className="px-4 py-2 rounded-lg flex items-center gap-2 border" style={{ borderColor: '#E5E7EB', color: '#374151' }}>
-                            <MessageSquare className="w-4 h-4" />
-                            Message
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Messages Tab */}
-            {activeTab === 'messages' && (
-              <div className="text-center py-12">
-                <MessageSquare className="w-12 h-12 mx-auto mb-4" style={{ color: '#D1D5DB' }} />
-                <p style={{ color: '#6B7280' }}>Internal messaging system coming soon</p>
+                    </div>
+                ))}
               </div>
             )}
           </div>
@@ -7334,7 +7186,7 @@ export const CreateListingPage: React.FC = () => {
                 <div>
                   <h3 className="flex items-center gap-2 mb-4" style={{ color: '#0D1B2A' }}>
                     <DollarSign className="w-5 h-5" style={{ color: '#2EC4B6' }} />
-                    Choose Your Listing Tier
+                    Choose Your Service Level
                   </h3>
                 </div>
 
@@ -7346,20 +7198,24 @@ export const CreateListingPage: React.FC = () => {
                       formData.tier === 'basic' ? 'border-[#2EC4B6] bg-[#CFFAFE]' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <h4 className="mb-2" style={{ color: '#0D1B2A' }}>Basic Listing</h4>
-                    <p className="text-2xl mb-3" style={{ color: '#2EC4B6' }}>Free</p>
-                    <ul className="space-y-2 text-sm" style={{ color: '#6B7280' }}>
+                    <h4 className="font-bold mb-2" style={{ color: '#0D1B2A' }}>Free Ad</h4>
+                    <p className="text-2xl font-bold mb-3" style={{ color: '#2EC4B6' }}>Free</p>
+                    <ul className="space-y-2 text-xs" style={{ color: '#6B7280' }}>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4" style={{ color: '#10B981' }} />
-                        30-day visibility
+                        Standard ad placement
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4" style={{ color: '#10B981' }} />
-                        Standard support
+                        Allocation of a dedicated agent
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4" style={{ color: '#10B981' }} />
-                        Basic analytics
+                        Assistance on the sale process
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" style={{ color: '#10B981' }} />
+                        Documentation finalization
                       </li>
                     </ul>
                   </div>
@@ -7371,32 +7227,32 @@ export const CreateListingPage: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h4 style={{ color: '#0D1B2A' }}>Premium Listing</h4>
-                      <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: '#FEF3C7', color: '#92400E' }}>
-                        Recommended
+                      <h4 className="font-bold" style={{ color: '#0D1B2A' }}>Paid Service</h4>
+                      <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded font-bold uppercase">
+                        Preferred
                       </span>
                     </div>
-                    <p className="text-2xl mb-3" style={{ color: '#2EC4B6' }}>AED 499/mo</p>
-                    <ul className="space-y-2 text-sm" style={{ color: '#6B7280' }}>
-                      <li className="flex items-center gap-2">
+                    <p className="text-2xl font-bold mb-3" style={{ color: '#2EC4B6' }}>AED 499/mo</p>
+                    <ul className="space-y-2 text-xs" style={{ color: '#6B7280' }}>
+                      <li className="flex items-center gap-2 font-bold text-gray-800">
                         <CheckCircle className="w-4 h-4" style={{ color: '#10B981' }} />
-                        90-day visibility
+                        Preferred placement on the list
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4" style={{ color: '#10B981' }} />
-                        Featured placement
+                        Professional Sale Pack for buyer
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4" style={{ color: '#10B981' }} />
-                        Priority support
+                        Business assessments & projections
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4" style={{ color: '#10B981' }} />
-                        Advanced analytics
+                        Legal attestation & transfer arrangements
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4" style={{ color: '#10B981' }} />
-                        Dedicated agent
+                        Includes all Free Ad features
                       </li>
                     </ul>
                   </div>
@@ -7414,7 +7270,7 @@ export const CreateListingPage: React.FC = () => {
                     />
                     <span className="text-sm" style={{ color: '#0D1B2A' }}>
                       I agree to pay a <strong>1% brokerage commission</strong> on the final sale price upon successful completion of the deal. 
-                      This fee is only charged when your business sells.
+                      This fee applies to both <strong>Free</strong> and <strong>Paid</strong> services and is only charged when your business sells.
                     </span>
                   </label>
                 </div>
@@ -7427,7 +7283,7 @@ export const CreateListingPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(currentStep - 1)}
-                  className="px-6 py-3 rounded-lg border"
+                  className="px-6 py-3 rounded-lg border font-medium transition-all hover:bg-gray-50"
                   style={{ borderColor: '#E5E7EB', color: '#374151' }}
                 >
                   Previous
@@ -7438,16 +7294,16 @@ export const CreateListingPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(currentStep + 1)}
-                  className="ml-auto px-6 py-3 rounded-lg"
-                  style={{ backgroundColor: '#2EC4B6', color: 'white' }}
+                  className="ml-auto px-6 py-3 rounded-lg font-medium text-white"
+                  style={{ backgroundColor: '#2EC4B6' }}
                 >
                   Next Step
                 </button>
               ) : (
                 <button
                   type="submit"
-                  className="ml-auto px-6 py-3 rounded-lg"
-                  style={{ backgroundColor: '#0D1B2A', color: 'white' }}
+                  className="ml-auto px-6 py-3 rounded-lg font-bold text-white transition-all hover:opacity-90"
+                  style={{ backgroundColor: '#0D1B2A' }}
                 >
                   Submit Listing
                 </button>
@@ -8514,45 +8370,45 @@ export const ListingDetailPage: React.FC = () => {
 
 <file path="src/pages/PricingPage.tsx">
 import React from 'react';
-import { Check, Star } from 'lucide-react';
+import { Check, Star} from 'lucide-react';
 
 export const PricingPage: React.FC = () => {
   const plans = [
     {
-      name: 'Basic Listing',
+      name: 'Free Ad',
       price: 'Free',
       period: '',
-      description: 'Perfect for testing the waters',
+      description: 'Standard placement with full agent support',
       features: [
+        'Standard ad placement',
+        'Allocation of a dedicated agent',
+        'Professional assistance on sale',
+        'Documentation finalization',
+        'P&S documentation arrangements',
         '30-day listing visibility',
-        'Basic listing placement',
-        'Standard support',
-        'Basic analytics dashboard',
-        'Email notifications',
-        'Search visibility'
+        'Email notifications'
       ],
       highlighted: false,
-      cta: 'Start for Free'
+      cta: 'Post Free Ad'
     },
     {
-      name: 'Premium Listing',
+      name: 'Paid Service',
       price: 'AED 499',
       period: '/month',
-      description: 'Most popular for serious sellers',
+      description: 'The complete professional sale package',
       features: [
-        'Everything in Basic',
-        '90-day listing visibility',
-        'Featured placement on homepage',
-        'Priority in search results',
-        'Dedicated agent support',
-        'Advanced analytics & insights',
-        'Priority customer support',
-        'Social media promotion',
-        'Email marketing campaigns',
-        'Instant enquiry notifications'
+        'Preferred placement on the list',
+        'Professional Sale Pack for buyers',
+        'Business assessment preparation',
+        'Financial analysis & projections',
+        'Legal attestation services',
+        'Final arrangements of transfer',
+        'Featured homepage placement',
+        'Everything in Free Ad included',
+        '90-day listing visibility'
       ],
       highlighted: true,
-      cta: 'Get Premium'
+      cta: 'Get Paid Service'
     }
   ];
 
@@ -8563,7 +8419,7 @@ export const PricingPage: React.FC = () => {
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="mb-4" style={{ color: 'white' }}>Simple, Transparent Pricing</h1>
           <p className="text-lg" style={{ color: '#E5E7EB' }}>
-            Choose the plan that fits your needs. Only pay commission when you sell.
+            Choose between standard placement or our professionally managed sale package.
           </p>
         </div>
       </div>
@@ -8574,7 +8430,7 @@ export const PricingPage: React.FC = () => {
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`bg-white rounded-xl shadow-lg overflow-hidden ${
+              className={`bg-white rounded-xl shadow-lg overflow-hidden flex flex-col ${
                 plan.highlighted ? 'ring-2 ring-[#2EC4B6] relative' : ''
               }`}
             >
@@ -8582,17 +8438,17 @@ export const PricingPage: React.FC = () => {
                 <div className="absolute top-0 right-0">
                   <div className="px-4 py-1 text-sm" style={{ backgroundColor: '#2EC4B6', color: 'white' }}>
                     <Star className="w-4 h-4 inline mr-1" />
-                    Most Popular
+                    Preferred Placement
                   </div>
                 </div>
               )}
 
-              <div className="p-8">
+              <div className="p-8 flex-1">
                 <h3 className="mb-2" style={{ color: '#0D1B2A' }}>{plan.name}</h3>
                 <p className="text-sm mb-6" style={{ color: '#6B7280' }}>{plan.description}</p>
                 
                 <div className="mb-6">
-                  <span className="text-4xl" style={{ color: '#2EC4B6' }}>{plan.price}</span>
+                  <span className="text-4xl font-bold" style={{ color: '#2EC4B6' }}>{plan.price}</span>
                   {plan.period && <span className="text-lg" style={{ color: '#6B7280' }}>{plan.period}</span>}
                 </div>
 
@@ -8604,12 +8460,11 @@ export const PricingPage: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-
+              </div>
+              <div className="p-8 pt-0">
                 <button
-                  className={`w-full py-3 rounded-lg transition-all ${
-                    plan.highlighted
-                      ? 'hover:opacity-90'
-                      : 'border-2 hover:bg-gray-50'
+                  className={`w-full py-3 rounded-lg font-bold transition-all ${
+                    plan.highlighted ? 'hover:opacity-90' : 'border-2 hover:bg-gray-50'
                   }`}
                   style={{
                     backgroundColor: plan.highlighted ? '#2EC4B6' : 'transparent',
@@ -8626,50 +8481,23 @@ export const PricingPage: React.FC = () => {
 
         {/* Commission Structure */}
         <section className="bg-white rounded-xl shadow-sm p-8 mb-16">
-          <h2 className="mb-6 text-center" style={{ color: '#0D1B2A' }}>Commission Structure</h2>
-          
+          <h2 className="mb-6 text-center" style={{ color: '#0D1B2A' }}>Success-Based Commission</h2>
           <div className="max-w-3xl mx-auto">
-            <div className="p-6 rounded-lg mb-6" style={{ backgroundColor: '#CFFAFE', border: '2px solid #2EC4B6' }}>
-              <div className="text-center">
-                <p className="text-5xl mb-2" style={{ color: '#0D1B2A' }}>1%</p>
-                <p className="text-lg mb-3" style={{ color: '#0D1B2A' }}>Success-Based Commission</p>
-                <p style={{ color: '#0E7490' }}>
-                  Only paid when your business successfully sells
+            <div className="p-6 rounded-lg mb-6 text-center" style={{ backgroundColor: '#CFFAFE', border: '2px solid #2EC4B6' }}>
+                <p className="text-5xl font-bold mb-2" style={{ color: '#0D1B2A' }}>1%</p>
+                <p className="text-lg font-medium" style={{ color: '#0D1B2A' }}>Brokerage Commission</p>
+                <p className="text-sm mt-2" style={{ color: '#0E7490' }}>
+                  Applied to the final sale price. Only paid upon successful completion of the deal.
                 </p>
-              </div>
             </div>
-
-            <div className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
               <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 flex-shrink-0 mt-1" style={{ color: '#10B981' }} />
-                <div>
-                  <p style={{ color: '#0D1B2A' }}>No upfront fees for basic listings</p>
-                  <p className="text-sm" style={{ color: '#6B7280' }}>Start listing your business immediately without any initial cost</p>
-                </div>
+                <Check className="w-5 h-5 text-[#10B981] mt-1" />
+                <p className="text-sm text-gray-600">Standard for both Free and Paid listings</p>
               </div>
-
               <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 flex-shrink-0 mt-1" style={{ color: '#10B981' }} />
-                <div>
-                  <p style={{ color: '#0D1B2A' }}>Commission calculated on final sale price</p>
-                  <p className="text-sm" style={{ color: '#6B7280' }}>You keep 99% of your hard-earned money</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 flex-shrink-0 mt-1" style={{ color: '#10B981' }} />
-                <div>
-                  <p style={{ color: '#0D1B2A' }}>Payment due within 7 days of completion</p>
-                  <p className="text-sm" style={{ color: '#6B7280' }}>Simple, transparent payment terms</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 flex-shrink-0 mt-1" style={{ color: '#10B981' }} />
-                <div>
-                  <p style={{ color: '#0D1B2A' }}>Full agent support included</p>
-                  <p className="text-sm" style={{ color: '#6B7280' }}>Professional brokerage services throughout the entire process</p>
-                </div>
+                <Check className="w-5 h-5 text-[#10B981] mt-1" />
+                <p className="text-sm text-gray-600">Payable within 7 days of deal completion</p>
               </div>
             </div>
           </div>
@@ -8678,79 +8506,41 @@ export const PricingPage: React.FC = () => {
         {/* Example Calculation */}
         <section className="bg-white rounded-xl shadow-sm p-8 mb-16">
           <h2 className="mb-6 text-center" style={{ color: '#0D1B2A' }}>Example Calculation</h2>
-          
-          <div className="max-w-2xl mx-auto">
-            <div className="p-6 rounded-lg" style={{ backgroundColor: '#F9FAFB' }}>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center pb-3 border-b" style={{ borderColor: '#E5E7EB' }}>
-                  <span style={{ color: '#6B7280' }}>Business Sale Price</span>
-                  <span className="text-xl" style={{ color: '#0D1B2A' }}>AED 2,500,000</span>
-                </div>
-                
-                <div className="flex justify-between items-center pb-3 border-b" style={{ borderColor: '#E5E7EB' }}>
-                  <span style={{ color: '#6B7280' }}>BizTech Commission (1%)</span>
-                  <span className="text-xl" style={{ color: '#EF4444' }}>- AED 25,000</span>
-                </div>
-                
-                <div className="flex justify-between items-center pt-2">
-                  <span style={{ color: '#0D1B2A' }}>You Receive</span>
-                  <span className="text-2xl" style={{ color: '#10B981' }}>AED 2,475,000</span>
-                </div>
+          <div className="max-w-2xl mx-auto p-6 rounded-lg" style={{ backgroundColor: '#F9FAFB' }}>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center pb-3 border-b" style={{ borderColor: '#E5E7EB' }}>
+                <span style={{ color: '#6B7280' }}>Business Sale Price</span>
+                <span className="text-xl font-bold" style={{ color: '#0D1B2A' }}>AED 2,500,000</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b" style={{ borderColor: '#E5E7EB' }}>
+                <span style={{ color: '#6B7280' }}>BizTech Commission (1%)</span>
+                <span className="text-xl font-bold text-red-500">- AED 25,000</span>
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <span className="font-bold" style={{ color: '#0D1B2A' }}>Seller Net Proceeds</span>
+                <span className="text-2xl font-bold" style={{ color: '#10B981' }}>AED 2,475,000</span>
               </div>
             </div>
-
-            <p className="text-center text-sm mt-4" style={{ color: '#6B7280' }}>
-              * Premium listing fees are separate and paid monthly regardless of sale
-            </p>
           </div>
         </section>
 
         {/* FAQ */}
         <section className="mb-16">
           <h2 className="mb-8 text-center" style={{ color: '#0D1B2A' }}>Frequently Asked Questions</h2>
-          
           <div className="max-w-3xl mx-auto space-y-4">
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h4 className="mb-2" style={{ color: '#0D1B2A' }}>Can I upgrade from Basic to Premium later?</h4>
-              <p style={{ color: '#6B7280' }}>
-                Yes, you can upgrade to Premium at any time. The remaining days on your basic listing will be credited.
+              <h4 className="font-bold mb-2">What is the Professional Sale Pack?</h4>
+              <p className="text-sm text-gray-600">
+                For Paid Service users, our agents prepare a comprehensive dossier for buyers including deep business assessments, financial analysis, and future projections to increase buyer confidence and sale speed.
               </p>
             </div>
-
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h4 className="mb-2" style={{ color: '#0D1B2A' }}>What happens if my business doesn&apos;t sell?</h4>
-              <p style={{ color: '#6B7280' }}>
-                You don&apos;t pay any commission. Premium listing fees are non-refundable, but you can relist for free or at a discounted rate.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h4 className="mb-2" style={{ color: '#0D1B2A' }}>Are there any hidden fees?</h4>
-              <p style={{ color: '#6B7280' }}>
-                No hidden fees. You only pay the monthly premium listing fee (if applicable) and 1% commission on successful sale.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h4 className="mb-2" style={{ color: '#0D1B2A' }}>Can I cancel my Premium listing?</h4>
-              <p style={{ color: '#6B7280' }}>
-                Yes, you can cancel anytime. Premium fees are charged monthly with no long-term contracts.
+              <h4 className="font-bold mb-2">Is the agent allocation really free?</h4>
+              <p className="text-sm text-gray-600">
+                Yes. Even with a Free Ad, we allocate an agent to assist you with the sale and help finalize documentation. We earn our commission when you successfully sell.
               </p>
             </div>
           </div>
-        </section>
-
-        {/* CTA */}
-        <section className="bg-gradient-to-r from-[#0D1B2A] to-[#1E3A5F] rounded-xl p-12 text-center">
-          <h2 className="mb-4" style={{ color: 'white' }}>Ready to List Your Business?</h2>
-          <p className="mb-8 text-lg" style={{ color: '#E5E7EB' }}>
-            Start with a free basic listing or go premium for maximum exposure
-          </p>
-          <a href="/register">
-            <button className="px-8 py-3 rounded-lg" style={{ backgroundColor: '#2EC4B6', color: 'white' }}>
-              Get Started Now
-            </button>
-          </a>
         </section>
       </div>
     </div>
@@ -9293,306 +9083,6 @@ export const ProfilePage: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
-    </div>
-  );
-};
-</file>
-
-<file path="src/pages/RegisterPage.tsx">
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Info } from 'lucide-react';
-
-export const RegisterPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    fullName: '',
-    companyName: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // Password validation
-  const passwordValidation = {
-    minLength: formData.password.length >= 8,
-    hasNumber: /\d/.test(formData.password),
-    hasUppercase: /[A-Z]/.test(formData.password),
-  };
-
-  const isPasswordValid = passwordValidation.minLength && passwordValidation.hasNumber && passwordValidation.hasUppercase;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    }
-
-    if (!isPasswordValid) {
-      alert('Please meet all password requirements');
-      return;
-    }
-
-    // Mock registration - in production, this would call an API
-    console.log('Registration data:', formData);
-    navigate('/signin');
-  };
-
-  return (
-    <div className="min-h-screen py-12 px-4 flex items-center justify-center" style={{ backgroundColor: '#E8EDF2' }}>
-      <div className="w-full max-w-xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="w-10 h-10 flex items-center justify-center rounded" style={{ backgroundColor: '#0D1B2A' }}>
-              <span className="text-xl" style={{ color: '#2EC4B6' }}>B</span>
-            </div>
-            <span className="text-xl" style={{ color: '#0D1B2A' }}>BizTech</span>
-          </div>
-          <h1 className="mb-2" style={{ color: '#0D1B2A' }}>Join BizTech Today</h1>
-          <p style={{ color: '#6B7280' }}>Connect with partners and opportunities worldwide</p>
-        </div>
-
-        {/* Form Card */}
-        <div className="bg-white rounded-lg p-8 shadow-lg">
-          <h2 className="mb-2" style={{ color: '#0D1B2A' }}>Client Registration</h2>
-          <p className="mb-6 text-sm" style={{ color: '#6B7280' }}>
-            Fill in your details below. Your account will require admin approval.
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Name and Company - Side by Side */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Full Name */}
-              <div>
-                <label className="block text-sm mb-2" style={{ color: '#374151' }}>
-                  Full Name <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all"
-                  style={{
-                    borderColor: '#E5E7EB',
-                    color: '#374151'
-                  }}
-                  placeholder="John Doe"
-                />
-              </div>
-
-              {/* Company Name */}
-              <div>
-                <label className="block text-sm mb-2" style={{ color: '#374151' }}>
-                  Company Name <span className="text-xs" style={{ color: '#6B7280' }}>(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.companyName}
-                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all"
-                  style={{
-                    borderColor: '#E5E7EB',
-                    color: '#374151'
-                  }}
-                  placeholder="Your Company LLC"
-                />
-              </div>
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm mb-2" style={{ color: '#374151' }}>
-                Email Address <span style={{ color: '#EF4444' }}>*</span>
-              </label>
-              <input
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all"
-                style={{
-                  borderColor: '#E5E7EB',
-                  color: '#374151'
-                }}
-                placeholder="you@company.com"
-              />
-            </div>
-
-            {/* Phone Number */}
-            <div>
-              <label className="block text-sm mb-2" style={{ color: '#374151' }}>
-                Phone Number <span className="text-xs" style={{ color: '#6B7280' }}>(Optional)</span>
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all"
-                style={{
-                  borderColor: '#E5E7EB',
-                  color: '#374151'
-                }}
-                placeholder="+971 50 000 0000"
-              />
-            </div>
-
-            {/* Password and Confirm - Side by Side */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Password */}
-              <div>
-                <label className="block text-sm mb-2" style={{ color: '#374151' }}>
-                  Password <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all pr-12"
-                    style={{
-                      borderColor: '#E5E7EB',
-                      color: '#374151'
-                    }}
-                    placeholder="Create password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                    style={{ color: '#9CA3AF' }}
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Confirm Password */}
-              <div>
-                <label className="block text-sm mb-2" style={{ color: '#374151' }}>
-                  Confirm Password <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all pr-12"
-                    style={{
-                      borderColor: '#E5E7EB',
-                      color: '#374151'
-                    }}
-                    placeholder="Confirm password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                    style={{ color: '#9CA3AF' }}
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Password Requirements */}
-            <div className="space-y-2">
-              <p className="text-sm" style={{ color: '#6B7280' }}>Password requirements:</p>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center ${passwordValidation.minLength ? 'bg-green-500' : 'bg-gray-300'}`}>
-                    {passwordValidation.minLength && <span className="text-white text-xs">✓</span>}
-                  </div>
-                  <span style={{ color: passwordValidation.minLength ? '#10B981' : '#6B7280' }}>
-                    At least 8 characters
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center ${passwordValidation.hasNumber ? 'bg-green-500' : 'bg-gray-300'}`}>
-                    {passwordValidation.hasNumber && <span className="text-white text-xs">✓</span>}
-                  </div>
-                  <span style={{ color: passwordValidation.hasNumber ? '#10B981' : '#6B7280' }}>
-                    Contains a number
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center ${passwordValidation.hasUppercase ? 'bg-green-500' : 'bg-gray-300'}`}>
-                    {passwordValidation.hasUppercase && <span className="text-white text-xs">✓</span>}
-                  </div>
-                  <span style={{ color: passwordValidation.hasUppercase ? '#10B981' : '#6B7280' }}>
-                    Contains uppercase
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Admin Approval Notice */}
-            <div className="p-4 rounded-lg flex gap-3" style={{ backgroundColor: '#CFFAFE', borderLeft: '4px solid #2EC4B6' }}>
-              <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#0891B2' }} />
-              <div>
-                <p className="text-sm mb-1" style={{ color: '#0D1B2A' }}>Admin Approval Required</p>
-                <p className="text-sm" style={{ color: '#0E7490' }}>
-                  Your account will be reviewed by our team. You&apos;ll receive an email once approved (typically within 24-48 hours).
-                </p>
-              </div>
-            </div>
-
-            {/* Create Account Button */}
-            <button
-              type="submit"
-              className="w-full py-3 rounded-lg transition-all hover:opacity-90"
-              style={{
-                backgroundColor: '#0D1B2A',
-                color: 'white'
-              }}
-            >
-              Create Account
-            </button>
-
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" style={{ borderColor: '#E5E7EB' }}></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white" style={{ color: '#6B7280' }}>Already registered?</span>
-              </div>
-            </div>
-
-            {/* Sign In Button */}
-            <Link to="/signin">
-              <button
-                type="button"
-                className="w-full py-3 rounded-lg border-2 transition-all hover:bg-opacity-5"
-                style={{
-                  borderColor: '#2EC4B6',
-                  color: '#2EC4B6',
-                  backgroundColor: 'transparent'
-                }}
-              >
-                Sign In Instead
-              </button>
-            </Link>
-          </form>
-        </div>
-
-        {/* Footer */}
-        <p className="text-center mt-6 text-sm" style={{ color: '#6B7280' }}>
-          By creating an account, you agree to our{' '}
-          <Link to="/terms" style={{ color: '#2EC4B6' }}>Terms of Service</Link>
-          {' '}and{' '}
-          <Link to="/privacy" style={{ color: '#2EC4B6' }}>Privacy Policy</Link>
-        </p>
       </div>
     </div>
   );
@@ -10352,188 +9842,6 @@ export const SellerDashboard: React.FC = () => {
 };
 </file>
 
-<file path="src/pages/SignInPage.tsx">
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { UserRole } from '../types';
-import { TestingInfo } from '../components/TestingInfo';
-
-export const SignInPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { login } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    role: 'buyer' as UserRole,
-  });
-  const [showPassword, setShowPassword] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      // Mock login - in production this would validate against backend
-      await login(formData.email, formData.password, formData.role);
-      // Redirect to appropriate dashboard based on role
-      navigate(`/dashboard/${formData.role}`);
-    } catch (error) {
-      console.error('Login failed:', error);
-      alert('Login failed. Please try again.');
-    }
-  };
-
-  return (
-    <div className="min-h-screen py-12 px-4 flex items-center justify-center" style={{ backgroundColor: '#E8EDF2' }}>
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="w-10 h-10 flex items-center justify-center rounded" style={{ backgroundColor: '#0D1B2A' }}>
-              <span className="text-xl" style={{ color: '#2EC4B6' }}>B</span>
-            </div>
-            <span className="text-xl" style={{ color: '#0D1B2A' }}>Biz Marketplace</span>
-          </div>
-          <h1 className="mb-2" style={{ color: '#0D1B2A' }}>Welcome Back</h1>
-          <p style={{ color: '#6B7280' }}>Sign in to access your dashboard</p>
-        </div>
-
-        {/* Form Card */}
-        <div className="bg-white rounded-lg p-8 shadow-lg">
-          <h2 className="mb-2" style={{ color: '#0D1B2A' }}>Sign In</h2>
-          <p className="mb-6" style={{ color: '#6B7280' }}>Enter your credentials to continue</p>
-
-          {/* Testing Info Banner */}
-          <TestingInfo />
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Role Selector (For Testing) */}
-            <div>
-              <label className="block text-sm mb-2" style={{ color: '#374151' }}>
-                Select Role (Testing)
-              </label>
-              <select
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all"
-                style={{
-                  borderColor: '#E5E7EB',
-                  color: '#374151'
-                }}
-              >
-                <option value="admin">Admin</option>
-                <option value="agent">Agent</option>
-                <option value="seller">Seller</option>
-                <option value="buyer">Buyer</option>
-              </select>
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm mb-2" style={{ color: '#374151' }}>
-                Email Address
-              </label>
-              <input
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all"
-                style={{
-                  borderColor: '#E5E7EB',
-                  color: '#374151'
-                }}
-                placeholder="you@company.com"
-              />
-            </div>
-
-            {/* Password */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm" style={{ color: '#374151' }}>
-                  Password
-                </label>
-                <Link to="/forgot-password" className="text-sm" style={{ color: '#2EC4B6' }}>
-                  Forgot?
-                </Link>
-              </div>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all pr-12"
-                  style={{
-                    borderColor: '#E5E7EB',
-                    color: '#374151'
-                  }}
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                  style={{ color: '#9CA3AF' }}
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Sign In Button */}
-            <button
-              type="submit"
-              className="w-full py-3 rounded-lg transition-all hover:opacity-90"
-              style={{
-                backgroundColor: '#0D1B2A',
-                color: 'white'
-              }}
-            >
-              Sign In
-            </button>
-
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" style={{ borderColor: '#E5E7EB' }}></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white" style={{ color: '#6B7280' }}>New to Biz Marketplace?</span>
-              </div>
-            </div>
-
-            {/* Create Account Button */}
-            <Link to="/register">
-              <button
-                type="button"
-                className="w-full py-3 rounded-lg border-2 transition-all hover:bg-opacity-5"
-                style={{
-                  borderColor: '#2EC4B6',
-                  color: '#2EC4B6',
-                  backgroundColor: 'transparent'
-                }}
-              >
-                Create an Account
-              </button>
-            </Link>
-          </form>
-        </div>
-
-        {/* Footer */}
-        <p className="text-center mt-6 text-sm" style={{ color: '#6B7280' }}>
-          By signing in, you agree to our{' '}
-          <Link to="/terms" style={{ color: '#2EC4B6' }}>Terms of Service</Link>
-          {' '}and{' '}
-          <Link to="/privacy" style={{ color: '#2EC4B6' }}>Privacy Policy</Link>
-        </p>
-      </div>
-    </div>
-  );
-};
-</file>
-
 <file path="src/pages/TermsPage.tsx">
 import React from 'react';
 import { FileText } from 'lucide-react';
@@ -11164,284 +10472,6 @@ export const ValuationPage: React.FC = () => {
 };
 </file>
 
-<file path="src/services/api.ts">
-// API Service Layer
-// This file contains all API calls to the backend
-
-import { User, Listing, Lead, ValuationRequest } from '../types';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
-
-// Generic API call function
-async function apiCall<T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.statusText}`);
-  }
-
-  return response.json();
-}
-
-// Authentication APIs
-export const authAPI = {
-  login: async (email: string, password: string) => {
-    return apiCall<{ user: User; token: string }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-  },
-
-  register: async (userData: Partial<User>) => {
-    return apiCall<{ user: User; token: string }>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-  },
-
-  logout: async () => {
-    return apiCall('/auth/logout', { method: 'POST' });
-  },
-};
-
-// Listings APIs
-export const listingsAPI = {
-  getAll: async (filters?: Record<string, any>) => {
-    const queryParams = new URLSearchParams(filters).toString();
-    return apiCall<Listing[]>(`/listings?${queryParams}`);
-  },
-
-  getById: async (id: string) => {
-    return apiCall<Listing>(`/listings/${id}`);
-  },
-
-  create: async (listingData: Partial<Listing>) => {
-    return apiCall<Listing>('/listings', {
-      method: 'POST',
-      body: JSON.stringify(listingData),
-    });
-  },
-
-  update: async (id: string, listingData: Partial<Listing>) => {
-    return apiCall<Listing>(`/listings/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(listingData),
-    });
-  },
-
-  delete: async (id: string) => {
-    return apiCall(`/listings/${id}`, { method: 'DELETE' });
-  },
-};
-
-// Leads APIs
-export const leadsAPI = {
-  create: async (leadData: Partial<Lead>) => {
-    return apiCall<Lead>('/leads', {
-      method: 'POST',
-      body: JSON.stringify(leadData),
-    });
-  },
-
-  getByAgent: async (agentId: string) => {
-    return apiCall<Lead[]>(`/leads/agent/${agentId}`);
-  },
-
-  updateStatus: async (leadId: string, status: string) => {
-    return apiCall<Lead>(`/leads/${leadId}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
-    });
-  },
-};
-
-// Valuation APIs
-export const valuationAPI = {
-  submit: async (valuationData: Partial<ValuationRequest>) => {
-    return apiCall<ValuationRequest>('/valuations', {
-      method: 'POST',
-      body: JSON.stringify(valuationData),
-    });
-  },
-};
-
-// Admin APIs
-export const adminAPI = {
-  assignListingToAgent: async (listingId: string, agentId: string) => {
-    return apiCall(`/admin/listings/${listingId}/assign`, {
-      method: 'POST',
-      body: JSON.stringify({ agentId }),
-    });
-  },
-
-  getPendingListings: async () => {
-    return apiCall<Listing[]>('/admin/listings/pending');
-  },
-
-  createAgent: async (agentData: Partial<User>) => {
-    return apiCall<User>('/admin/agents', {
-      method: 'POST',
-      body: JSON.stringify(agentData),
-    });
-  },
-};
-
-// Payment APIs
-export const paymentAPI = {
-  createSubscription: async (subscriptionData: {
-    userId: string;
-    tier: string;
-    amount: number;
-  }) => {
-    return apiCall('/payments/subscribe', {
-      method: 'POST',
-      body: JSON.stringify(subscriptionData),
-    });
-  },
-
-  verifyPayment: async (paymentId: string) => {
-    return apiCall(`/payments/verify/${paymentId}`);
-  },
-};
-</file>
-
-<file path="src/styles/globals.css">
-@import "tailwindcss";
-
-/* Import Google Fonts - BizTech Typography System */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Darker+Grotesque:wght@400;500;600;700;900&display=swap');
-
-@layer base {
-  :root {
-    /* BizTech Brand Colors */
-    --color-primary: #0D1B2A;
-    --color-accent: #2EC4B6;
-    --color-success: #2ECC71;
-    --color-warning: #F39C12;
-    --color-info: #3498DB;
-    --color-danger: #E74C3C;
-    --color-background: #F5F7FA;
-    --color-card: #FFFFFF;
-    --color-border: #E2E8F0;
-    --color-text: #1A202C;
-    --color-text-secondary: #4A5568;
-    --color-surface: #F5F5F5;
-
-    /* Typography - BizTech Design System */
-    --font-heading: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    --font-metric: 'Darker Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-
-    /* Spacing & Radius */
-    --radius-sharp: 4px;
-    --radius-card: 8px;
-    --radius-modal: 12px;
-
-    /* Shadows */
-    --shadow-card: 0 2px 8px rgba(13, 27, 42, 0.08);
-    --shadow-card-hover: 0 4px 16px rgba(13, 27, 42, 0.12);
-    --shadow-premium: 0 4px 20px rgba(46, 196, 182, 0.2);
-
-    /* Premium Gradient */
-    --color-premium-gradient-start: #2EC4B6;
-    --color-premium-gradient-end: #F59E0B;
-  }
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    background-color: var(--color-background);
-    color: #1A202C;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-weight: 600;
-    color: #1A202C;
-  }
-
-  h1 {
-    font-size: 2rem;
-    line-height: 1.25;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-    line-height: 1.3;
-  }
-
-  h3 {
-    font-size: 1.25rem;
-    line-height: 1.4;
-  }
-
-  h4 {
-    font-size: 1.125rem;
-    line-height: 1.5;
-  }
-
-  p {
-    font-size: 0.9375rem;
-    line-height: 1.6;
-    color: #4A5568;
-  }
-
-  /* Metric class for financial numbers */
-  .metric {
-    font-family: var(--font-metric);
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Premium gradient utilities */
-  .gradient-premium {
-    background: linear-gradient(135deg, var(--color-premium-gradient-start), var(--color-premium-gradient-end));
-  }
-
-  .text-gradient-premium {
-    background: linear-gradient(135deg, var(--color-premium-gradient-start), var(--color-premium-gradient-end));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-}
-
-/* Responsive Typography */
-@media (max-width: 768px) {
-  h1 {
-    font-size: 1.75rem;
-  }
-  
-  h2 {
-    font-size: 1.375rem;
-  }
-  
-  h3 {
-    font-size: 1.125rem;
-  }
-  
-  h4 {
-    font-size: 1rem;
-  }
-}
-</file>
-
 <file path="src/types/index.ts">
 // Global Type Definitions for BizTech Buy & Sell Module
 
@@ -11591,6 +10621,968 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(),tailwindcss()],
 });
+</file>
+
+<file path="src/contexts/AuthContext.tsx">
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User } from '../types';
+import { authAPI } from '../services/api';
+
+interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  setUserData: (user: User, token: string) => void; // New helper for manual updates
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Initialize State from LocalStorage
+  useEffect(() => {
+    const initAuth = () => {
+      const storedUser = localStorage.getItem('biztech_user');
+      const token = localStorage.getItem('biztech_token');
+      
+      if (storedUser && token) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (e) {
+          console.error("Failed to parse stored user", e);
+          localStorage.removeItem('biztech_user');
+          localStorage.removeItem('biztech_token');
+        }
+      }
+      setIsLoading(false);
+    };
+    initAuth();
+  }, []);
+
+  // Login Action
+  const login = async (email: string, password: string) => {
+    try {
+      const response = await authAPI.login(email, password);
+      setUserData(response.user, response.token);
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
+  };
+
+  // Manual State Setter (Used by Register Page after OTP)
+  const setUserData = (userData: User, token: string) => {
+    localStorage.setItem('biztech_token', token);
+    localStorage.setItem('biztech_user', JSON.stringify(userData));
+    setUser(userData);
+  };
+
+  // Logout Action
+  const logout = () => {
+    authAPI.logout(); 
+    localStorage.removeItem('biztech_token');
+    localStorage.removeItem('biztech_user');
+    setUser(null);
+    window.location.href = '/signin';
+  };
+
+  const value = {
+    user,
+    login,
+    logout,
+    setUserData,
+    isAuthenticated: !!user,
+    isLoading
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+</file>
+
+<file path="src/pages/RegisterPage.tsx">
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff, Info, CheckCircle, ArrowLeft } from 'lucide-react';
+import { authAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { UserRole } from '../types';
+
+export const RegisterPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { setUserData } = useAuth();
+  
+  // --- STATE MANAGEMENT ---
+  const [step, setStep] = useState<'register' | 'otp' | 'pending_approval'>('register');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const [role, setRole] = useState<UserRole>('seller');
+  const [otp, setOtp] = useState('');
+  
+  const [formData, setFormData] = useState({
+    fullName: '',
+    companyName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // --- VALIDATION ---
+  const passwordValidation = {
+    minLength: formData.password.length >= 8,
+    hasNumber: /\d/.test(formData.password),
+    hasUppercase: /[A-Z]/.test(formData.password),
+  };
+  const isPasswordValid = passwordValidation.minLength && passwordValidation.hasNumber && passwordValidation.hasUppercase;
+
+  // --- 1. HANDLE REGISTRATION FORM SUBMISSION ---
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    if (!isPasswordValid) {
+      setError('Please meet all password requirements');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await authAPI.register({
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        role: role,
+        companyName: formData.companyName,
+        agreedToCommission: role === 'seller' ? true : undefined,
+        financialMeans: role === 'buyer' ? '100k-1M' : undefined 
+      });
+
+      setStep('otp');
+    } catch (err: any) {
+      console.error('Registration failed:', err);
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- 2. HANDLE OTP VERIFICATION ---
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await authAPI.verifyEmail(formData.email, otp);
+
+      if (response.token && response.user) {
+        setUserData(response.user, response.token);
+        navigate(`/dashboard/${role}`);
+      } else if (response.requireApproval) {
+        setStep('pending_approval');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Invalid or expired OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==========================
+  //        RENDER VIEWS
+  // ==========================
+
+  // --- VIEW 1: OTP INPUT FORM ---
+  if (step === 'otp') {
+    return (
+      <div className="min-h-screen py-12 px-4 flex items-center justify-center bg-[#E8EDF2]">
+        <div className="w-full max-w-md bg-white rounded-lg p-8 shadow-lg text-center">
+          <h2 className="text-2xl font-bold text-[#0D1B2A] mb-4">Verify Your Email</h2>
+          <p className="text-gray-600 mb-6">
+            We've sent a 6-digit code to <strong>{formData.email}</strong>.
+          </p>
+
+          {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">{error}</div>}
+
+          <form onSubmit={handleVerifyOTP}>
+            <div className="mb-6">
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="Enter 6-digit OTP"
+                className="w-full px-4 py-3 text-center text-xl tracking-widest border rounded-lg focus:ring-2 focus:outline-none border-gray-300"
+                maxLength={6}
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-lg text-white font-medium bg-[#0D1B2A] hover:opacity-90 disabled:opacity-50 mb-4"
+            >
+              {loading ? 'Verifying...' : 'Verify Email'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep('register')}
+              className="text-[#6B7280] text-sm hover:underline flex items-center justify-center gap-1 mx-auto"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to Registration
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // --- VIEW 2: PENDING APPROVAL (SELLERS) ---
+  if (step === 'pending_approval') {
+    return (
+      <div className="min-h-screen py-12 px-4 flex items-center justify-center bg-[#E8EDF2]">
+        <div className="w-full max-w-md bg-white rounded-lg p-8 shadow-lg text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-[#0D1B2A] mb-2">Registration Submitted</h2>
+          <p className="text-gray-600 mb-6">
+            Your email has been verified! Since you registered as a <strong>Seller</strong>, 
+            your account requires Admin approval before you can access the dashboard.
+          </p>
+          <div className="bg-blue-50 p-4 rounded-lg mb-6 text-sm text-blue-800">
+            You will be notified via email once your account is active (typically within 24 hours).
+          </div>
+          <Link to="/signin">
+            <button className="w-full py-3 rounded-lg border-2 border-[#0D1B2A] text-[#0D1B2A] hover:bg-gray-50 transition-all">
+              Return to Sign In
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // --- VIEW 3: REGISTRATION FORM (DEFAULT) ---
+  return (
+    <div className="min-h-screen py-12 px-4 flex items-center justify-center bg-[#E8EDF2]">
+      <div className="w-full max-w-xl">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <div className="w-10 h-10 flex items-center justify-center rounded bg-[#0D1B2A]">
+              <span className="text-xl text-[#2EC4B6]">B</span>
+            </div>
+            <span className="text-xl text-[#0D1B2A] font-bold">BizTech</span>
+          </div>
+          <h1 className="mb-2 text-2xl font-bold text-[#0D1B2A]">Join BizTech Today</h1>
+          <p className="text-[#6B7280]">Connect with partners and opportunities worldwide</p>
+        </div>
+
+        <div className="bg-white rounded-lg p-8 shadow-lg">
+          <h2 className="mb-6 text-xl font-bold text-[#0D1B2A]">Create Account</h2>
+          
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-200 text-red-700 text-sm rounded">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleRegister} className="space-y-5">
+            {/* Account Type Toggle */}
+            <div className="flex p-1 bg-gray-100 rounded-lg">
+              <button
+                type="button"
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === 'seller' ? 'bg-white shadow text-[#0D1B2A]' : 'text-gray-500'}`}
+                onClick={() => setRole('seller')}
+              >
+                I want to Sell
+              </button>
+              <button
+                type="button"
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${role === 'buyer' ? 'bg-white shadow text-[#0D1B2A]' : 'text-gray-500'}`}
+                onClick={() => setRole('buyer')}
+              >
+                I want to Buy
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm mb-2 text-gray-700">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 border-gray-200"
+                  placeholder="John Doe"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-2 text-gray-700">Company (Optional)</label>
+                <input
+                  type="text"
+                  value={formData.companyName}
+                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 border-gray-200"
+                  placeholder="Company LLC"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm mb-2 text-gray-700">Email Address *</label>
+              <input
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 border-gray-200"
+                placeholder="you@company.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-2 text-gray-700">Phone Number</label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 border-gray-200"
+                placeholder="+971 50 000 0000"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm mb-2 text-gray-700">Password *</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 border-gray-200"
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400">
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm mb-2 text-gray-700">Confirm Password *</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    className="w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 border-gray-200"
+                  />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-3 text-gray-400">
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-xs space-y-1 text-gray-500">
+              <p className={passwordValidation.minLength ? 'text-green-600' : ''}>• At least 8 characters</p>
+              <p className={passwordValidation.hasNumber ? 'text-green-600' : ''}>• Contains a number</p>
+              <p className={passwordValidation.hasUppercase ? 'text-green-600' : ''}>• Contains uppercase letter</p>
+            </div>
+
+            {role === 'seller' && (
+              <div className="p-4 rounded-lg flex gap-3 bg-[#CFFAFE] border-l-4 border-[#2EC4B6]">
+                <Info className="w-5 h-5 flex-shrink-0 mt-0.5 text-[#0891B2]" />
+                <p className="text-sm text-[#0E7490]">
+                  By registering as a seller, you agree to the 1% commission fee on successful sales.
+                </p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-lg text-white font-medium bg-[#0D1B2A] hover:opacity-90 disabled:opacity-50 transition-all"
+            >
+              {loading ? 'Creating Account...' : 'Next'}
+            </button>
+
+            <div className="text-center text-sm text-gray-500">
+              Already have an account? <Link to="/signin" className="text-[#2EC4B6] font-medium hover:underline">Sign In</Link>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+</file>
+
+<file path="src/pages/SignInPage.tsx">
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+
+export const SignInPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  
+  // UI State
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    
+    try {
+      // Call the login API through context
+      await login(formData.email, formData.password);
+      
+      // Determine redirection based on the user object stored in localStorage
+      // We read from storage here because state updates in Context are async
+      const storedUser = localStorage.getItem('biztech_user');
+      
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        if (user.role) {
+          navigate(`/dashboard/${user.role}`);
+        } else {
+          navigate('/'); // Fallback
+        }
+      }
+    } catch (err: any) {
+      console.error('Login failed:', err);
+      // Show the exact error message from the backend API
+      setError(err.message || 'Invalid credentials. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen py-12 px-4 flex items-center justify-center" style={{ backgroundColor: '#E8EDF2' }}>
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <div className="w-10 h-10 flex items-center justify-center rounded" style={{ backgroundColor: '#0D1B2A' }}>
+              <span className="text-xl" style={{ color: '#2EC4B6' }}>B</span>
+            </div>
+            <span className="text-xl" style={{ color: '#0D1B2A' }}>Biz Marketplace</span>
+          </div>
+          <h1 className="mb-2" style={{ color: '#0D1B2A' }}>Welcome Back</h1>
+          <p style={{ color: '#6B7280' }}>Sign in to access your dashboard</p>
+        </div>
+
+        {/* Form Container */}
+        <div className="bg-white rounded-lg p-8 shadow-lg">
+          <h2 className="mb-2" style={{ color: '#0D1B2A' }}>Sign In</h2>
+          <p className="mb-6" style={{ color: '#6B7280' }}>Enter your credentials to continue</p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm mb-2" style={{ color: '#374151' }}>
+                Email Address
+              </label>
+              <input
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all"
+                style={{ borderColor: '#E5E7EB', color: '#374151' }}
+                placeholder="you@company.com"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm" style={{ color: '#374151' }}>
+                  Password
+                </label>
+                <Link to="/forgot-password" className="text-sm" style={{ color: '#2EC4B6' }}>
+                  Forgot?
+                </Link>
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all pr-12"
+                  style={{ borderColor: '#E5E7EB', color: '#374151' }}
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: '#9CA3AF' }}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: '#0D1B2A', color: 'white' }}
+            >
+              {loading ? 'Signing In...' : 'Sign In'}
+            </button>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t" style={{ borderColor: '#E5E7EB' }}></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white" style={{ color: '#6B7280' }}>New to Biz Marketplace?</span>
+              </div>
+            </div>
+
+            <Link to="/register">
+              <button
+                type="button"
+                className="w-full py-3 rounded-lg border-2 transition-all hover:bg-opacity-5"
+                style={{ borderColor: '#2EC4B6', color: '#2EC4B6', backgroundColor: 'transparent' }}
+              >
+                Create an Account
+              </button>
+            </Link>
+          </form>
+        </div>
+
+        <p className="text-center mt-6 text-sm" style={{ color: '#6B7280' }}>
+          By signing in, you agree to our{' '}
+          <Link to="/terms" style={{ color: '#2EC4B6' }}>Terms of Service</Link>
+          {' '}and{' '}
+          <Link to="/privacy" style={{ color: '#2EC4B6' }}>Privacy Policy</Link>
+        </p>
+      </div>
+    </div>
+  );
+};
+</file>
+
+<file path="src/services/api.ts">
+import { User, Listing, Lead, ValuationRequest } from '../types';
+
+// Use the environment variable defined in .env, fallback to localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+
+// --- DATA ADAPTERS (CamelCase <-> Snake_Case) ---
+
+// Prepare data for the Backend (snake_case)
+const transformUserToBackend = (data: any) => {
+  const payload: any = { ...data };
+  
+  // Map specific fields
+  if (data.fullName) payload.name = data.fullName;
+  if (data.phone) payload.mobile = data.phone;
+  if (data.agreedToCommission !== undefined) payload.agreed_commission = data.agreedToCommission;
+  if (data.financialMeans) payload.financial_means = data.financialMeans;
+  
+  // Cleanup frontend-only keys
+  delete payload.fullName;
+  delete payload.phone;
+  delete payload.agreedToCommission;
+  delete payload.financialMeans;
+  delete payload.confirmPassword;
+  delete payload.companyName; 
+  
+  return payload;
+};
+
+// Process data from the Backend (camelCase)
+const transformUserFromBackend = (user: any): User => {
+  if (!user) return user;
+  return {
+    ...user,
+    // Ensure frontend types match backend response
+    agreedToCommission: user.agreed_commission,
+    financialMeans: user.financial_means,
+  };
+};
+
+// --- CORE API CLIENT ---
+
+async function apiCall<T>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T> {
+  const token = localStorage.getItem('biztech_token');
+  
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    ...options?.headers,
+  };
+
+  if (token) {
+    (headers as any)['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Ensure endpoint starts with slash and combine with Base URL
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE_URL}${cleanEndpoint}`;
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      // Global 401 Handler: Session Expired
+      if (response.status === 401) {
+        localStorage.removeItem('biztech_token');
+        localStorage.removeItem('biztech_user');
+      }
+      throw new Error(data.message || `API Error: ${response.statusText}`);
+    }
+
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message || 'Network connection failed');
+  }
+}
+
+// --- AUTHENTICATION API ---
+
+export const authAPI = {
+  login: async (email: string, password: string) => {
+    const response = await apiCall<{ success: boolean; user: any; token: string }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+    
+    return {
+      ...response,
+      user: transformUserFromBackend(response.user)
+    };
+  },
+
+  register: async (userData: any) => {
+    const payload = transformUserToBackend(userData);
+    
+    // Returns { success: true, message: string, email: string } - No token yet
+    return apiCall<{ success: boolean; message: string; email: string }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  verifyEmail: async (email: string, otp: string) => {
+    const response = await apiCall<{ 
+      success: boolean; 
+      message: string; 
+      token?: string; 
+      user?: any;
+      requireApproval?: boolean; 
+    }>('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+    });
+
+    if (response.user) {
+      response.user = transformUserFromBackend(response.user);
+    }
+    return response;
+  },
+
+  logout: async () => {
+    return Promise.resolve(); 
+  },
+};
+
+// --- LISTINGS API ---
+export const listingsAPI = {
+  getAll: async (filters?: Record<string, any>) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    const response = await apiCall<{ success: boolean; count: number; data: Listing[] }>(`/listings?${queryParams}`);
+    return response.data;
+  },
+
+  getById: async (id: string) => {
+    const response = await apiCall<{ success: boolean; data: Listing }>(`/listings/${id}`);
+    return response.data;
+  },
+
+  create: async (listingData: Partial<Listing>) => {
+    return apiCall<{ success: boolean; data: Listing }>('/listings', {
+      method: 'POST',
+      body: JSON.stringify(listingData),
+    }).then(res => res.data);
+  },
+
+  update: async (id: string, listingData: Partial<Listing>) => {
+    return apiCall<{ success: boolean; data: Listing }>(`/listings/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(listingData),
+    }).then(res => res.data);
+  },
+
+  delete: async (id: string) => {
+    return apiCall(`/listings/${id}`, { method: 'DELETE' });
+  },
+};
+
+// --- LEADS API ---
+export const leadsAPI = {
+  create: async (leadData: Partial<Lead>) => {
+    return apiCall<{ success: boolean; data: Lead }>('/leads', {
+      method: 'POST',
+      body: JSON.stringify(leadData),
+    }).then(res => res.data);
+  },
+
+  getByAgent: async () => {
+    const response = await apiCall<{ success: boolean; count: number; data: Lead[] }>(`/agent/leads`);
+    return response.data;
+  },
+
+  updateStatus: async (leadId: string, status: string) => {
+    return apiCall<{ success: boolean; data: Lead }>(`/agent/leads/${leadId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    }).then(res => res.data);
+  },
+};
+
+// --- VALUATION API ---
+export const valuationAPI = {
+  submit: async (valuationData: Partial<ValuationRequest>) => {
+    return apiCall<{ success: boolean; message: string; data: ValuationRequest }>('/valuation', {
+      method: 'POST',
+      body: JSON.stringify(valuationData),
+    }).then(res => res.data);
+  },
+};
+
+// --- ADMIN API ---
+export const adminAPI = {
+  // NEW: Get real-time stats
+  getStats: async () => {
+    const response = await apiCall<{ success: boolean; data: any }>('/admin/stats');
+    return response.data;
+  },
+
+  // NEW: Get users (e.g. pending sellers)
+  getUsers: async (filters?: { role?: string; status?: string }) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    const response = await apiCall<{ success: boolean; data: User[] }>(`/admin/users?${queryParams}`);
+    return response.data;
+  },
+
+  // NEW: Update user account status (Approve/Reject)
+  updateUserStatus: async (userId: string, status: 'active' | 'rejected') => {
+    return apiCall(`/admin/users/${userId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  assignListingToAgent: async (listingId: string, agentId: string) => {
+    return apiCall('/admin/assign-agent', {
+      method: 'POST',
+      body: JSON.stringify({ listingId, agentId }),
+    });
+  },
+
+  getPendingListings: async () => {
+    const response = await apiCall<{ success: boolean; count: number; data: Listing[] }>('/admin/pending-listings');
+    return response.data;
+  },
+
+  createAgent: async (agentData: Partial<User>) => {
+    return apiCall('/admin/create-agent', {
+      method: 'POST',
+      body: JSON.stringify(agentData),
+    });
+  },
+};
+
+// --- PAYMENT API ---
+export const paymentAPI = {
+  createSubscription: async (subscriptionData: { listingId: string; amount: number; }) => {
+    return apiCall('/payments/subscribe', {
+      method: 'POST',
+      body: JSON.stringify(subscriptionData),
+    });
+  },
+};
+</file>
+
+<file path="src/styles/globals.css">
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Darker+Grotesque:wght@400;500;600;700;900&display=swap');
+
+@layer base {
+  :root {
+    /* BizTech Brand Colors */
+    --color-primary: #0D1B2A;
+    --color-accent: #2EC4B6;
+    --color-success: #2ECC71;
+    --color-warning: #F39C12;
+    --color-info: #3498DB;
+    --color-danger: #E74C3C;
+    --color-background: #F5F7FA;
+    --color-card: #FFFFFF;
+    --color-border: #E2E8F0;
+    --color-text: #1A202C;
+    --color-text-secondary: #4A5568;
+    --color-surface: #F5F5F5;
+
+    /* Typography - BizTech Design System */
+    --font-heading: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    --font-metric: 'Darker Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    /* Spacing & Radius */
+    --radius-sharp: 4px;
+    --radius-card: 8px;
+    --radius-modal: 12px;
+
+    /* Shadows */
+    --shadow-card: 0 2px 8px rgba(13, 27, 42, 0.08);
+    --shadow-card-hover: 0 4px 16px rgba(13, 27, 42, 0.12);
+    --shadow-premium: 0 4px 20px rgba(46, 196, 182, 0.2);
+
+    /* Premium Gradient */
+    --color-premium-gradient-start: #2EC4B6;
+    --color-premium-gradient-end: #F59E0B;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background-color: var(--color-background);
+    color: #1A202C;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    color: #1A202C;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.25;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+
+  h4 {
+    font-size: 1.125rem;
+    line-height: 1.5;
+  }
+
+  p {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: #4A5568;
+  }
+
+  /* Metric class for financial numbers */
+  .metric {
+    font-family: var(--font-metric);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Premium gradient utilities */
+  .gradient-premium {
+    background: linear-gradient(135deg, var(--color-premium-gradient-start), var(--color-premium-gradient-end));
+  }
+
+  .text-gradient-premium {
+    background: linear-gradient(135deg, var(--color-premium-gradient-start), var(--color-premium-gradient-end));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.75rem;
+  }
+  
+  h2 {
+    font-size: 1.375rem;
+  }
+  
+  h3 {
+    font-size: 1.125rem;
+  }
+  
+  h4 {
+    font-size: 1rem;
+  }
+}
 </file>
 
 </files>

@@ -37,6 +37,54 @@ const transformUserFromBackend = (user: any): User => {
   };
 };
 
+// NEW: Transform Database flat object into Frontend Nested Type
+const transformListingFromBackend = (l: any): Listing => {
+    return {
+        id: l.id.toString(),
+        sellerId: l.sellerId?.toString(),
+        assignedAgentId: l.assignedAgentId?.toString(),
+        tier: l.tier,
+        status: l.status,
+        expiryDate: l.expiryDate,
+        createdAt: l.createdAt,
+        updatedAt: l.updatedAt,
+        views: l.views || 0,
+        // Nested public data as expected by Listing type
+        publicData: {
+            title: l.title,
+            industry: l.industry,
+            region: l.region,
+            price: parseFloat(l.price),
+            netProfit: l.net_profit ? parseFloat(l.net_profit) : 0,
+            turnover: l.turnover ? parseFloat(l.turnover) : 0,
+        },
+        // Private data mapping
+        privateData: {
+            legalBusinessName: l.legal_business_name,
+            fullAddress: l.full_address,
+            ownerName: l.owner_name,
+        },
+        // Attach leads for dashboard stats
+        Leads: l.Leads || []
+    } as any;
+};
+
+const transformListingToBackend = (data: any) => {
+    return {
+        title: data.title,
+        industry: data.industry,
+        region: data.region,
+        price: parseFloat(data.price),
+        net_profit: parseFloat(data.netProfit),
+        turnover: parseFloat(data.turnover),
+        legal_business_name: data.legalBusinessName,
+        full_address: data.fullAddress,
+        owner_name: data.ownerName,
+        tier: data.tier,
+        description: data.description 
+    };
+};
+
 // --- CORE API CLIENT ---
 
 async function apiCall<T>(
@@ -134,29 +182,33 @@ export const authAPI = {
 export const listingsAPI = {
   getAll: async (filters?: Record<string, any>) => {
     const queryParams = new URLSearchParams(filters).toString();
-    const response = await apiCall<{ success: boolean; count: number; data: Listing[] }>(`/listings?${queryParams}`);
-    return response.data;
+    const response = await apiCall<{ success: boolean; count: number; data: any[] }>(`/listings?${queryParams}`);
+    return response.data.map(transformListingFromBackend);
   },
-
+  // FIXED: Now transforms specific database rows into UI-ready Listing objects
+  getSellerListings: async () => {
+    const response = await apiCall<{ success: boolean; data: any[] }>('/listings/my-listings');
+    return response.data.map(transformListingFromBackend);
+  },
   getById: async (id: string) => {
-    const response = await apiCall<{ success: boolean; data: Listing }>(`/listings/${id}`);
-    return response.data;
+    const response = await apiCall<{ success: boolean; data: any }>(`/listings/${id}`);
+    return transformListingFromBackend(response.data);
   },
-
-  create: async (listingData: Partial<Listing>) => {
-    return apiCall<{ success: boolean; data: Listing }>('/listings', {
+  create: async (listingData: any) => {
+    const payload = transformListingToBackend(listingData);
+    const response = await apiCall<{ success: boolean; data: any }>('/listings', {
       method: 'POST',
-      body: JSON.stringify(listingData),
-    }).then(res => res.data);
+      body: JSON.stringify(payload),
+    });
+    return transformListingFromBackend(response.data);
   },
-
   update: async (id: string, listingData: Partial<Listing>) => {
-    return apiCall<{ success: boolean; data: Listing }>(`/listings/${id}`, {
+    const response = await apiCall<{ success: boolean; data: any }>(`/listings/${id}`, {
       method: 'PUT',
       body: JSON.stringify(listingData),
-    }).then(res => res.data);
+    });
+    return transformListingFromBackend(response.data);
   },
-
   delete: async (id: string) => {
     return apiCall(`/listings/${id}`, { method: 'DELETE' });
   },
@@ -196,6 +248,27 @@ export const valuationAPI = {
 
 // --- ADMIN API ---
 export const adminAPI = {
+  // NEW: Get real-time stats
+  getStats: async () => {
+    const response = await apiCall<{ success: boolean; data: any }>('/admin/stats');
+    return response.data;
+  },
+
+  // NEW: Get users (e.g. pending sellers)
+  getUsers: async (filters?: { role?: string; status?: string }) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    const response = await apiCall<{ success: boolean; data: User[] }>(`/admin/users?${queryParams}`);
+    return response.data;
+  },
+
+  // NEW: Update user account status (Approve/Reject)
+  updateUserStatus: async (userId: string, status: 'active' | 'rejected') => {
+    return apiCall(`/admin/users/${userId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  },
+
   assignListingToAgent: async (listingId: string, agentId: string) => {
     return apiCall('/admin/assign-agent', {
       method: 'POST',
@@ -204,8 +277,8 @@ export const adminAPI = {
   },
 
   getPendingListings: async () => {
-    return apiCall<{ success: boolean; count: number; data: Listing[] }>('/admin/pending-listings')
-      .then(res => res.data);
+    const response = await apiCall<{ success: boolean; count: number; data: Listing[] }>('/admin/pending-listings');
+    return response.data;
   },
 
   createAgent: async (agentData: Partial<User>) => {

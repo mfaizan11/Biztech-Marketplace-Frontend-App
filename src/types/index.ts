@@ -46,6 +46,7 @@ export interface Listing {
   expiryDate?: string;
   createdAt: string;
   updatedAt: string;
+  views?: number;
 }
 
 export interface Lead {

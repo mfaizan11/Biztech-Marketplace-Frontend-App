@@ -1,43 +1,43 @@
 import React from 'react';
-import { Check, Star } from 'lucide-react';
+import { Check, Star} from 'lucide-react';
 
 export const PricingPage: React.FC = () => {
   const plans = [
     {
-      name: 'Basic Listing',
+      name: 'Free Ad',
       price: 'Free',
       period: '',
-      description: 'Perfect for testing the waters',
+      description: 'Standard placement with full agent support',
       features: [
+        'Standard ad placement',
+        'Allocation of a dedicated agent',
+        'Professional assistance on sale',
+        'Documentation finalization',
+        'P&S documentation arrangements',
         '30-day listing visibility',
-        'Basic listing placement',
-        'Standard support',
-        'Basic analytics dashboard',
-        'Email notifications',
-        'Search visibility'
+        'Email notifications'
       ],
       highlighted: false,
-      cta: 'Start for Free'
+      cta: 'Post Free Ad'
     },
     {
-      name: 'Premium Listing',
+      name: 'Paid Service',
       price: 'AED 499',
       period: '/month',
-      description: 'Most popular for serious sellers',
+      description: 'The complete professional sale package',
       features: [
-        'Everything in Basic',
-        '90-day listing visibility',
-        'Featured placement on homepage',
-        'Priority in search results',
-        'Dedicated agent support',
-        'Advanced analytics & insights',
-        'Priority customer support',
-        'Social media promotion',
-        'Email marketing campaigns',
-        'Instant enquiry notifications'
+        'Preferred placement on the list',
+        'Professional Sale Pack for buyers',
+        'Business assessment preparation',
+        'Financial analysis & projections',
+        'Legal attestation services',
+        'Final arrangements of transfer',
+        'Featured homepage placement',
+        'Everything in Free Ad included',
+        '90-day listing visibility'
       ],
       highlighted: true,
-      cta: 'Get Premium'
+      cta: 'Get Paid Service'
     }
   ];
 
@@ -48,7 +48,7 @@ export const PricingPage: React.FC = () => {
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="mb-4" style={{ color: 'white' }}>Simple, Transparent Pricing</h1>
           <p className="text-lg" style={{ color: '#E5E7EB' }}>
-            Choose the plan that fits your needs. Only pay commission when you sell.
+            Choose between standard placement or our professionally managed sale package.
           </p>
         </div>
       </div>
@@ -59,7 +59,7 @@ export const PricingPage: React.FC = () => {
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`bg-white rounded-xl shadow-lg overflow-hidden ${
+              className={`bg-white rounded-xl shadow-lg overflow-hidden flex flex-col ${
                 plan.highlighted ? 'ring-2 ring-[#2EC4B6] relative' : ''
               }`}
             >
@@ -67,34 +67,33 @@ export const PricingPage: React.FC = () => {
                 <div className="absolute top-0 right-0">
                   <div className="px-4 py-1 text-sm" style={{ backgroundColor: '#2EC4B6', color: 'white' }}>
                     <Star className="w-4 h-4 inline mr-1" />
-                    Most Popular
+                    Preferred Placement
                   </div>
                 </div>
               )}
 
-              <div className="p-8">
+              <div className="p-8 flex-1">
                 <h3 className="mb-2" style={{ color: '#0D1B2A' }}>{plan.name}</h3>
                 <p className="text-sm mb-6" style={{ color: '#6B7280' }}>{plan.description}</p>
                 
                 <div className="mb-6">
-                  <span className="text-4xl" style={{ color: '#2EC4B6' }}>{plan.price}</span>
+                  <span className="text-4xl font-bold" style={{ color: '#2EC4B6' }}>{plan.price}</span>
                   {plan.period && <span className="text-lg" style={{ color: '#6B7280' }}>{plan.period}</span>}
                 </div>
 
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#10B981' }} />
+                      <Check className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#10B981' }} />
                       <span style={{ color: '#374151' }}>{feature}</span>
                     </li>
                   ))}
                 </ul>
-
+              </div>
+              <div className="p-8 pt-0">
                 <button
-                  className={`w-full py-3 rounded-lg transition-all ${
-                    plan.highlighted
-                      ? 'hover:opacity-90'
-                      : 'border-2 hover:bg-gray-50'
+                  className={`w-full py-3 rounded-lg font-bold transition-all ${
+                    plan.highlighted ? 'hover:opacity-90' : 'border-2 hover:bg-gray-50'
                   }`}
                   style={{
                     backgroundColor: plan.highlighted ? '#2EC4B6' : 'transparent',
@@ -111,50 +110,23 @@ export const PricingPage: React.FC = () => {
 
         {/* Commission Structure */}
         <section className="bg-white rounded-xl shadow-sm p-8 mb-16">
-          <h2 className="mb-6 text-center" style={{ color: '#0D1B2A' }}>Commission Structure</h2>
-          
+          <h2 className="mb-6 text-center" style={{ color: '#0D1B2A' }}>Success-Based Commission</h2>
           <div className="max-w-3xl mx-auto">
-            <div className="p-6 rounded-lg mb-6" style={{ backgroundColor: '#CFFAFE', border: '2px solid #2EC4B6' }}>
-              <div className="text-center">
-                <p className="text-5xl mb-2" style={{ color: '#0D1B2A' }}>1%</p>
-                <p className="text-lg mb-3" style={{ color: '#0D1B2A' }}>Success-Based Commission</p>
-                <p style={{ color: '#0E7490' }}>
-                  Only paid when your business successfully sells
+            <div className="p-6 rounded-lg mb-6 text-center" style={{ backgroundColor: '#CFFAFE', border: '2px solid #2EC4B6' }}>
+                <p className="text-5xl font-bold mb-2" style={{ color: '#0D1B2A' }}>1%</p>
+                <p className="text-lg font-medium" style={{ color: '#0D1B2A' }}>Brokerage Commission</p>
+                <p className="text-sm mt-2" style={{ color: '#0E7490' }}>
+                  Applied to the final sale price. Only paid upon successful completion of the deal.
                 </p>
-              </div>
             </div>
-
-            <div className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
               <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 flex-shrink-0 mt-1" style={{ color: '#10B981' }} />
-                <div>
-                  <p style={{ color: '#0D1B2A' }}>No upfront fees for basic listings</p>
-                  <p className="text-sm" style={{ color: '#6B7280' }}>Start listing your business immediately without any initial cost</p>
-                </div>
+                <Check className="w-5 h-5 text-[#10B981] mt-1" />
+                <p className="text-sm text-gray-600">Standard for both Free and Paid listings</p>
               </div>
-
               <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 flex-shrink-0 mt-1" style={{ color: '#10B981' }} />
-                <div>
-                  <p style={{ color: '#0D1B2A' }}>Commission calculated on final sale price</p>
-                  <p className="text-sm" style={{ color: '#6B7280' }}>You keep 99% of your hard-earned money</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 flex-shrink-0 mt-1" style={{ color: '#10B981' }} />
-                <div>
-                  <p style={{ color: '#0D1B2A' }}>Payment due within 7 days of completion</p>
-                  <p className="text-sm" style={{ color: '#6B7280' }}>Simple, transparent payment terms</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 flex-shrink-0 mt-1" style={{ color: '#10B981' }} />
-                <div>
-                  <p style={{ color: '#0D1B2A' }}>Full agent support included</p>
-                  <p className="text-sm" style={{ color: '#6B7280' }}>Professional brokerage services throughout the entire process</p>
-                </div>
+                <Check className="w-5 h-5 text-[#10B981] mt-1" />
+                <p className="text-sm text-gray-600">Payable within 7 days of deal completion</p>
               </div>
             </div>
           </div>
@@ -163,79 +135,41 @@ export const PricingPage: React.FC = () => {
         {/* Example Calculation */}
         <section className="bg-white rounded-xl shadow-sm p-8 mb-16">
           <h2 className="mb-6 text-center" style={{ color: '#0D1B2A' }}>Example Calculation</h2>
-          
-          <div className="max-w-2xl mx-auto">
-            <div className="p-6 rounded-lg" style={{ backgroundColor: '#F9FAFB' }}>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center pb-3 border-b" style={{ borderColor: '#E5E7EB' }}>
-                  <span style={{ color: '#6B7280' }}>Business Sale Price</span>
-                  <span className="text-xl" style={{ color: '#0D1B2A' }}>AED 2,500,000</span>
-                </div>
-                
-                <div className="flex justify-between items-center pb-3 border-b" style={{ borderColor: '#E5E7EB' }}>
-                  <span style={{ color: '#6B7280' }}>BizTech Commission (1%)</span>
-                  <span className="text-xl" style={{ color: '#EF4444' }}>- AED 25,000</span>
-                </div>
-                
-                <div className="flex justify-between items-center pt-2">
-                  <span style={{ color: '#0D1B2A' }}>You Receive</span>
-                  <span className="text-2xl" style={{ color: '#10B981' }}>AED 2,475,000</span>
-                </div>
+          <div className="max-w-2xl mx-auto p-6 rounded-lg" style={{ backgroundColor: '#F9FAFB' }}>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center pb-3 border-b" style={{ borderColor: '#E5E7EB' }}>
+                <span style={{ color: '#6B7280' }}>Business Sale Price</span>
+                <span className="text-xl font-bold" style={{ color: '#0D1B2A' }}>AED 2,500,000</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b" style={{ borderColor: '#E5E7EB' }}>
+                <span style={{ color: '#6B7280' }}>BizTech Commission (1%)</span>
+                <span className="text-xl font-bold text-red-500">- AED 25,000</span>
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <span className="font-bold" style={{ color: '#0D1B2A' }}>Seller Net Proceeds</span>
+                <span className="text-2xl font-bold" style={{ color: '#10B981' }}>AED 2,475,000</span>
               </div>
             </div>
-
-            <p className="text-center text-sm mt-4" style={{ color: '#6B7280' }}>
-              * Premium listing fees are separate and paid monthly regardless of sale
-            </p>
           </div>
         </section>
 
         {/* FAQ */}
         <section className="mb-16">
           <h2 className="mb-8 text-center" style={{ color: '#0D1B2A' }}>Frequently Asked Questions</h2>
-          
           <div className="max-w-3xl mx-auto space-y-4">
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h4 className="mb-2" style={{ color: '#0D1B2A' }}>Can I upgrade from Basic to Premium later?</h4>
-              <p style={{ color: '#6B7280' }}>
-                Yes, you can upgrade to Premium at any time. The remaining days on your basic listing will be credited.
+              <h4 className="font-bold mb-2">What is the Professional Sale Pack?</h4>
+              <p className="text-sm text-gray-600">
+                For Paid Service users, our agents prepare a comprehensive dossier for buyers including deep business assessments, financial analysis, and future projections to increase buyer confidence and sale speed.
               </p>
             </div>
-
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h4 className="mb-2" style={{ color: '#0D1B2A' }}>What happens if my business doesn&apos;t sell?</h4>
-              <p style={{ color: '#6B7280' }}>
-                You don&apos;t pay any commission. Premium listing fees are non-refundable, but you can relist for free or at a discounted rate.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h4 className="mb-2" style={{ color: '#0D1B2A' }}>Are there any hidden fees?</h4>
-              <p style={{ color: '#6B7280' }}>
-                No hidden fees. You only pay the monthly premium listing fee (if applicable) and 1% commission on successful sale.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h4 className="mb-2" style={{ color: '#0D1B2A' }}>Can I cancel my Premium listing?</h4>
-              <p style={{ color: '#6B7280' }}>
-                Yes, you can cancel anytime. Premium fees are charged monthly with no long-term contracts.
+              <h4 className="font-bold mb-2">Is the agent allocation really free?</h4>
+              <p className="text-sm text-gray-600">
+                Yes. Even with a Free Ad, we allocate an agent to assist you with the sale and help finalize documentation. We earn our commission when you successfully sell.
               </p>
             </div>
           </div>
-        </section>
-
-        {/* CTA */}
-        <section className="bg-gradient-to-r from-[#0D1B2A] to-[#1E3A5F] rounded-xl p-12 text-center">
-          <h2 className="mb-4" style={{ color: 'white' }}>Ready to List Your Business?</h2>
-          <p className="mb-8 text-lg" style={{ color: '#E5E7EB' }}>
-            Start with a free basic listing or go premium for maximum exposure
-          </p>
-          <a href="/register">
-            <button className="px-8 py-3 rounded-lg" style={{ backgroundColor: '#2EC4B6', color: 'white' }}>
-              Get Started Now
-            </button>
-          </a>
         </section>
       </div>
     </div>
