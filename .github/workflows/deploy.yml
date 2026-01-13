@@ -1,65 +1,40 @@
-name: Deploy to Namecheap
-
+name: 🚀 Deploy website on push
 on:
   push:
     branches:
-      - main
-
+      - main # Deploys when you push to the main branch
 jobs:
   web-deploy:
-    name: Build and Deploy
+    name: 🎉 Deploy
     runs-on: ubuntu-latest
-
     steps:
       - name: 🚚 Get latest code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v2
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '18'
 
-      - name: 📦 Install Dependencies
+      - name: 📦 Install dependencies
         run: npm ci
 
-      - name: 🏗️ Build Project
-        run: npm run build
-        env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+      - name: 🔨 Build Project
+        run: npm run build # This command builds the project and creates the /dist folder
 
-      - name: ⚙️ Generate .htaccess
-        run: |
-          cat <<EOF > ./dist/.htaccess
-          <IfModule mod_rewrite.c>
-            RewriteEngine On
-            RewriteBase /
-            RewriteRule ^index\.html$ - [L]
-            RewriteCond %{REQUEST_FILENAME} !-f
-            RewriteCond %{REQUEST_FILENAME} !-d
-            RewriteCond %{REQUEST_FILENAME} !-l
-            RewriteRule . /index.html [L]
-          </IfModule>
-          EOF
-
-      - name: 📂 Sync files via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: 📂 Sync build files to FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
+          # Server credentials from GitHub Secrets
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          
-          # Local folder (your build output)
-          local-dir: ./dist/
-          
-          # Remote path (Based on your screenshot)
-          # We go INSIDE the folder shown in your image
-          server-dir: ./marketplace.biztech.ae/
-          
-          # CONNECTION SETTINGS
-          protocol: ftp
+          protocol: ftps
           port: 21
-          # security: false helps bypass the strict certificate check causing timeouts
-          security: strict
-          timeout: 30000
-          dangerous-clean-slate: true
+
+          # Local directory on the runner containing your build files
+          local-dir: ./dist/
+
+          # Remote directory on the server.
+          # The FTP user's root is the target folder, so we deploy to its root (./)
+          server-dir: ./
