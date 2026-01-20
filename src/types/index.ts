@@ -18,6 +18,9 @@ export interface User {
   financialMeans?: FinancialMeans;
   createdAt: string;
   agreedToCommission?: boolean;
+  phone?: string;
+  company?: string;
+  address?: string;
 }
 
 export interface PublicListingData {

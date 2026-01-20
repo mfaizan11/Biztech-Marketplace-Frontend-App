@@ -38,6 +38,8 @@ const transformUserFromBackend = (user: any): User => {
 };
 
 // NEW: Transform Database flat object into Frontend Nested Type
+// src/services/api.ts
+
 const transformListingFromBackend = (l: any): Listing => {
     return {
         id: l.id.toString(),
@@ -49,22 +51,29 @@ const transformListingFromBackend = (l: any): Listing => {
         createdAt: l.createdAt,
         updatedAt: l.updatedAt,
         views: l.views || 0,
-        // Nested public data as expected by Listing type
+        
+        // --- ADD THESE LINES BELOW ---
+        sale_pack_ready: l.sale_pack_ready,
+        financial_analysis_ready: l.financial_analysis_ready,
+        legal_attestation_ready: l.legal_attestation_ready,
+        transfer_arrangements_ready: l.transfer_arrangements_ready,
+        // -----------------------------
+
         publicData: {
             title: l.title,
+            // ... existing publicData mapping
             industry: l.industry,
             region: l.region,
             price: parseFloat(l.price),
             netProfit: l.net_profit ? parseFloat(l.net_profit) : 0,
             turnover: l.turnover ? parseFloat(l.turnover) : 0,
         },
-        // Private data mapping
         privateData: {
+            // ... existing privateData mapping
             legalBusinessName: l.legal_business_name,
             fullAddress: l.full_address,
             ownerName: l.owner_name,
         },
-        // Attach leads for dashboard stats
         Leads: l.Leads || []
     } as any;
 };
@@ -157,6 +166,19 @@ export const authAPI = {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+  },
+  updateProfile: async (data: any) => {
+    const response = await apiCall<{ success: boolean; user: any }>('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: data.name,
+        // Ensure keys match what your controller expects
+        mobile: data.phone,       
+        company_name: data.company, 
+        address: data.address
+      }),
+    });
+    return transformUserFromBackend(response.user);
   },
 
   verifyEmail: async (email: string, otp: string) => {
@@ -325,7 +347,7 @@ getUsers: async (filters?: {
 
   getPendingListings: async () => {
     const response = await apiCall<{ success: boolean; count: number; data: Listing[] }>('/admin/pending-listings');
-    return response.data;
+    return response.data.map(transformListingFromBackend); 
   },
 
   createAgent: async (agentData: Partial<User>) => {
