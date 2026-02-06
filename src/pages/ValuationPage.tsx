@@ -201,7 +201,7 @@ export const ValuationPage: React.FC = () => {
                             borderColor: 'var(--color-surface)',
                             borderRadius: 'var(--radius-sharp)'
                           }}
-                          placeholder="+1 (555) 000-0000"
+                          placeholder="+971 50 123 4567"
                         />
                       </div>
                     </div>

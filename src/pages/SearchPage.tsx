@@ -73,6 +73,13 @@ export const SearchPage: React.FC = () => {
                 <option value="Food & Beverage" className="text-black">Food & Beverage</option>
                 <option value="Technology" className="text-black">Technology</option>
                 <option value="Retail" className="text-black">Retail</option>
+                <option value="Healthcare" className="text-black">Healthcare</option>
+                <option value="Education" className="text-black">Education</option>
+                <option value="Real Estate" className="text-black">Real Estate</option>
+                <option value="Construction" className="text-black">Construction</option>
+                <option value="Manufacturing" className="text-black">Manufacturing</option>
+                <option value="Logistics & Transport" className="text-black">Logistics & Transport</option>
+                <option value="Hositality & Tourism" className="text-black">Hositality & Tourism</option>
               </select>
 
               <select 
@@ -81,6 +88,13 @@ export const SearchPage: React.FC = () => {
                 className="bg-white/10 border border-white/20 p-3 rounded-lg text-sm outline-none"
               >
                 <option value="" className="text-black">All Dubai</option>
+                <option value="Abu Dhabi" className="text-black">Abu Dhabi</option>
+                <option value="Dubai" className="text-black">Dubai</option>
+                <option value="Sharjah" className="text-black">Sharjah</option>
+                <option value="Ajman" className="text-black">Ajman</option>
+                <option value="Umm Al Quwain" className="text-black">Umm Al Quwain</option>
+                <option value="Ras Al Khaimah" className="text-black">Ras Al Khaimah</option>
+                <option value="Fujairah" className="text-black">Fujairah</option>
                 <option value="Dubai Marina" className="text-black">Dubai Marina</option>
                 <option value="DIFC" className="text-black">DIFC</option>
                 <option value="Business Bay" className="text-black">Business Bay</option>
