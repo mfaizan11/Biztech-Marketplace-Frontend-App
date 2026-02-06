@@ -33,9 +33,9 @@ export const HomePage: React.FC = () => {
             >
               <span className="text-sm">🌍 Global Business Marketplace</span>
             </div>
-
-            <h1 style={{ color: "var(--color-primary)", fontSize: "2.5rem" }}>
-              Connect. Compete. Collaborate.
+            
+            <h1 className="font-bold mb-5" style={{ color: 'var(--color-primary)', fontSize: '2.5rem' }}>
+              Buy. Sell. Transfer
             </h1>
 
             <p

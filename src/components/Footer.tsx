@@ -14,7 +14,7 @@ export const Footer: React.FC = () => {
               <img src={logo} alt="BizTech Logo" className="w-auto h-20 bg-white rounded-[5px]" />
             </div>
             <p className="text-sm opacity-80 mb-4 text-[#CCCCC1]">
-              Global platform connecting businesses for partnerships, collaborations, and opportunities. Connect. Compete. Collaborate.
+              Buy. Sell. Transfer
             </p>
             <div className="text-sm opacity-60">
               © {new Date().getFullYear()} BizTech
@@ -63,13 +63,13 @@ export const Footer: React.FC = () => {
               <div className="flex items-start gap-2 text-sm opacity-80">
                 <MapPin className="w-4 h-4 mt-1 flex-shrink-0" />
                 <span>
-                  Office No 06, Level 26th, Aspin Commercial Tower, Sheikh Zayed Road, Dubai, UAE
+                  Dubai
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm opacity-80">
                 <Phone className="w-4 h-4" />
                 <a href="tel:00971521205514" className="hover:opacity-100">
-                  00971-52-120-5514
+                  050 3288 786
                 </a>
               </div>
               <div className="flex items-center gap-2 text-sm opacity-80">
